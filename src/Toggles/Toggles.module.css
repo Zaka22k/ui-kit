@@ -1,0 +1,263 @@
+/* ───────────── Общее для Checkbox и Switch ───────────── */
+
+/* Корень: <label>, поэтому клик по подписи тоже переключает элемент. */
+.root {
+  --toggle-duration: 200ms;
+  --toggle-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  vertical-align: middle;
+  color: var(--label-primary);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Подпись перед элементом. Порядок Tab не меняется: в DOM элемент идёт первым. */
+.labelStart {
+  flex-direction: row-reverse;
+}
+
+.disabled {
+  color: var(--label-tertiary);
+  cursor: not-allowed;
+}
+
+.control {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+}
+
+.input {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.label {
+  min-width: 0;
+  color: inherit;
+  font-size: var(--font-body);
+}
+
+/* ───────────── 1. Чекбокс (Checkbox) ───────────── */
+
+.checkboxRoot {
+  --CheckboxSize: 20px;
+  --CheckboxRadius: 6px;
+
+  --fill: var(--fill-tertiary);
+  --stroke: var(--control-surface);
+  --glyph: var(--text-selected);
+}
+
+.checkboxRoot:not(.disabled):hover {
+  --fill: var(--fill-secondary);
+}
+
+.checkboxRoot:not(.disabled):active {
+  --fill: var(--fill-primary);
+}
+
+.checkboxRoot:has(.input:checked),
+.checkboxRoot:has(.input:indeterminate) {
+  --fill: var(--control-accent);
+  --stroke: var(--control-accent);
+}
+
+.checkboxRoot:not(.disabled):hover:has(.input:checked),
+.checkboxRoot:not(.disabled):hover:has(.input:indeterminate) {
+  --fill: color-mix(in srgb, var(--control-accent) 90%, white);
+  --stroke: color-mix(in srgb, var(--control-accent) 90%, white);
+}
+
+.checkboxRoot:not(.disabled):active:has(.input:checked),
+.checkboxRoot:not(.disabled):active:has(.input:indeterminate) {
+  --fill: var(--selected-content-bg);
+  --stroke: var(--selected-content-bg);
+}
+
+.checkboxRoot.disabled {
+  --fill: var(--fill-quaternary);
+  --stroke: var(--separator);
+  --glyph: var(--label-tertiary);
+}
+
+.checkboxRoot.disabled:has(.input:checked),
+.checkboxRoot.disabled:has(.input:indeterminate) {
+  --fill: var(--fill-secondary);
+  --stroke: transparent;
+}
+
+.checkboxRoot .control {
+  width: var(--CheckboxSize);
+  height: var(--CheckboxSize);
+}
+
+.box {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--stroke);
+  border-radius: var(--CheckboxRadius);
+  background-color: var(--fill);
+  color: var(--glyph);
+  transition:
+    background-color var(--toggle-duration) var(--toggle-easing),
+    border-color var(--toggle-duration) var(--toggle-easing);
+}
+
+.input:focus-visible ~ .box {
+  outline: 2px solid var(--keyboard-focus-indicator);
+  outline-offset: 2px;
+}
+
+.glyph {
+  width: 14px;
+  height: 14px;
+}
+
+.check,
+.dash {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset var(--toggle-duration) var(--toggle-easing);
+}
+
+.input:checked ~ .box .check {
+  stroke-dashoffset: 0;
+}
+
+.input:indeterminate ~ .box .check {
+  stroke-dashoffset: 1;
+}
+
+.input:indeterminate ~ .box .dash {
+  stroke-dashoffset: 0;
+}
+
+/* ───────────── 2. Свичер (Switch) ───────────── */
+
+.switchRoot {
+  --SwitchThumbSwitchingOpacity: 8%;
+
+  --track-fill: var(--fill-secondary);
+  --track-stroke: var(--control-surface);
+  --thumb-fill: var(--text-selected);
+}
+
+.switchRoot:not(.disabled):hover {
+  --track-fill: var(--fill-primary);
+}
+
+.switchRoot:not(.disabled):active {
+  --track-fill: var(--control-surface);
+}
+
+.switchRoot:has(.input:checked) {
+  --track-fill: var(--control-accent);
+  --track-stroke: var(--control-accent);
+}
+
+.switchRoot:not(.disabled):hover:has(.input:checked) {
+  --track-fill: color-mix(in srgb, var(--control-accent) 90%, white);
+  --track-stroke: color-mix(in srgb, var(--control-accent) 90%, white);
+}
+
+.switchRoot:not(.disabled):active:has(.input:checked) {
+  --track-fill: var(--selected-content-bg);
+  --track-stroke: var(--selected-content-bg);
+}
+
+.switchRoot.disabled {
+  --track-fill: var(--fill-quaternary);
+  --track-stroke: var(--separator);
+  --thumb-fill: var(--label-tertiary);
+}
+
+.switchRoot.disabled:has(.input:checked) {
+  --track-fill: var(--fill-secondary);
+  --track-stroke: transparent;
+}
+
+.switchRoot.switching {
+  --thumb-fill: color-mix(
+    in srgb,
+    var(--text-primary) var(--SwitchThumbSwitchingOpacity),
+    transparent
+  );
+}
+
+.switchRoot .control {
+  width: var(--switch-width);
+  height: var(--switch-height);
+}
+
+.track {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--track-stroke);
+  border-radius: var(--CircularCornerRadius);
+  background-color: var(--track-fill);
+  transition:
+    background-color var(--toggle-duration) var(--toggle-easing),
+    border-color var(--toggle-duration) var(--toggle-easing);
+}
+
+.input:focus-visible ~ .track {
+  outline: 2px solid var(--keyboard-focus-indicator);
+  outline-offset: 2px;
+}
+
+.thumbSlot {
+  position: absolute;
+  top: var(--switch-inset);
+  left: var(--switch-inset);
+  display: inline-flex;
+  pointer-events: none;
+  transform: translateX(0);
+  transition: transform var(--toggle-duration) var(--toggle-easing);
+}
+
+.input:checked ~ .thumbSlot {
+  transform: translateX(
+    calc(
+      var(--switch-width) - var(--switch-thumb-width) - 2 * var(--switch-inset)
+    )
+  );
+}
+
+/* Цвет (--thumb-fill) читает style из Toggles.tsx: его рисует само стекло. */
+.thumb {
+  --lg-edge-opacity: 0;
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: background-color var(--toggle-duration) var(--toggle-easing);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .box,
+  .check,
+  .dash,
+  .track,
+  .thumbSlot,
+  .thumb {
+    transition: none;
+  }
+}

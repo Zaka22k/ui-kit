@@ -1,0 +1,207 @@
+/* Вьюпорт: по одному на каждую позицию. Сам не ловит клики, только тосты внутри. */
+.viewport {
+  position: fixed;
+  z-index: var(--ZIndexPopup);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  pointer-events: none;
+}
+
+/* Направление, откуда тост «выезжает» (используется в keyframes). */
+.top-center {
+  top: 0;
+  left: 0;
+  right: 0;
+  align-items: center;
+  padding-top: max(16px, env(safe-area-inset-top));
+  --toast-shift-x: 0px;
+  --toast-shift-y: -16px;
+}
+
+.top-right {
+  top: 0;
+  right: 0;
+  align-items: flex-end;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-right: max(16px, env(safe-area-inset-right));
+  --toast-shift-x: 24px;
+  --toast-shift-y: 0px;
+}
+
+.bottom-right {
+  bottom: 0;
+  right: 0;
+  align-items: flex-end;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  padding-right: max(16px, env(safe-area-inset-right));
+  --toast-shift-x: 24px;
+  --toast-shift-y: 0px;
+}
+
+/*
+ * Корень тоста — это LiquidGlass. Анимируем transform и opacity на самой панели,
+ * а не на родителе: opacity < 1 у предка отрезает фон для backdrop-filter.
+ * Цвет стекла (--toast-tint) читает style из Toast.tsx. --toast-duration держите
+ * равной EXIT_DURATION в Toast.tsx.
+ */
+.toast {
+  --toast-duration: 200ms;
+  --toast-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --toast-tint: color-mix(in srgb, var(--material-hud-bg) 55%, transparent);
+
+  --lg-radius: 36px;
+
+  pointer-events: auto;
+  min-height: 56px;
+  padding: 12px 12px 12px 14px;
+  color: var(--label-primary);
+  font-size: var(--font-body);
+  animation: toast-in var(--toast-duration) var(--toast-easing) both;
+}
+
+.leaving {
+  pointer-events: none;
+  animation: toast-out var(--toast-duration) var(--toast-easing) both;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--toast-shift-x, 0), var(--toast-shift-y, 0))
+      scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--toast-shift-x, 0), var(--toast-shift-y, 0))
+      scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .leaving {
+    animation: none;
+  }
+
+  .leaving {
+    opacity: 0;
+  }
+}
+
+.body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Круглый значок варианта */
+.icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--CircularCornerRadius);
+}
+
+.info {
+  color: var(--system-blue);
+  background: rgba(var(--system-blue-rgb), 0.16);
+}
+
+.success {
+  color: var(--system-green);
+  background: rgba(var(--system-green-rgb), 0.16);
+}
+
+.warning {
+  color: var(--system-orange);
+  background: rgba(var(--system-orange-rgb), 0.16);
+}
+
+.error {
+  color: var(--system-red);
+  background: rgba(var(--system-red-rgb), 0.16);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-wrap: anywhere;
+}
+
+.title {
+  color: var(--label-primary);
+  font-weight: 600;
+}
+
+.description {
+  color: var(--label-secondary);
+}
+
+.action {
+  align-self: flex-start;
+  height: 28px;
+  margin-top: 8px;
+  padding-inline: 10px;
+  border: 1px solid var(--window-border);
+  border-radius: var(--ControlCornerRadius);
+  background: var(--fill-tertiary);
+  color: var(--control-accent);
+  font-size: var(--font-body);
+  cursor: pointer;
+  transition: background-color var(--toast-duration) var(--toast-easing);
+}
+
+.action:hover {
+  background: var(--fill-secondary);
+}
+
+.action:active {
+  background: var(--fill-primary);
+}
+
+.close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-top: 2px;
+  border: 0;
+  border-radius: var(--CircularCornerRadius);
+  background: transparent;
+  color: var(--label-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--toast-duration) var(--toast-easing),
+    color var(--toast-duration) var(--toast-easing);
+}
+
+.close:hover {
+  background: var(--fill-secondary);
+  color: var(--label-primary);
+}
+
+.close:focus-visible,
+.action:focus-visible {
+  outline: 2px solid var(--keyboard-focus-indicator);
+  outline-offset: 2px;
+}

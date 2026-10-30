@@ -1,0 +1,236 @@
+/* ───────────── Управление цветовой схемой ───────────── */
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="auto"] {
+  color-scheme: light dark;
+}
+
+/* ───────────── Цветовые токены: light-dark(светлая, тёмная) ───────────── */
+
+:root {
+  /* SYSTEM COLORS */
+  --system-red: light-dark(#ff3b30, #ff453a);
+  --system-orange: light-dark(#ff9500, #ff9f0a);
+  --system-yellow: light-dark(#ffcc00, #ffd60a);
+  --system-green: light-dark(#28cd41, #32d74b);
+  --system-mint: light-dark(#00c7be, #66d4cf);
+  --system-teal: light-dark(#59adc4, #6ac4dc);
+  --system-cyan: light-dark(#55bef0, #5ac8f5);
+  --system-blue: light-dark(#007aff, #0a84ff);
+  --system-indigo: light-dark(#5856d6, #5e5ce6);
+  --system-purple: light-dark(#af52de, #bf5af2);
+  --system-pink: light-dark(#ff2d55, #ff375f);
+  --system-brown: light-dark(#a2845e, #ac8e68);
+
+  /* SYSTEM GRAYS */
+  --system-gray: light-dark(#8e8e93, #98989d);
+  --system-gray-2: light-dark(#aeaeb2, #636366);
+  --system-gray-3: light-dark(#c7c7cc, #48484a);
+  --system-gray-4: light-dark(#d1d1d6, #3a3a3c);
+  --system-gray-5: light-dark(#e5e5ea, #2c2c2e);
+  --system-gray-6: light-dark(#f2f2f7, #1c1c1e);
+
+  /* LABELS & TEXT */
+  --label-primary: light-dark(rgba(0, 0, 0, 0.85), rgba(255, 255, 255, 0.85));
+  --label-secondary: light-dark(rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0.55));
+  --label-tertiary: light-dark(rgba(0, 0, 0, 0.25), rgba(255, 255, 255, 0.25));
+  --label-quaternary: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+
+  --text-primary: light-dark(#000000, #ffffff);
+  --text-placeholder: light-dark(
+    rgba(0, 0, 0, 0.25),
+    rgba(255, 255, 255, 0.25)
+  );
+  /* Текст и значки на акцентной заливке */
+  --text-selected: #ffffff;
+  --link: light-dark(#0068da, #419cff);
+
+  /* BACKGROUNDS & WINDOWS */
+  --window-bg: light-dark(#ececec, #1e1e1e);
+  --under-page-bg: light-dark(#dcdcdc, #282828);
+  --control-bg: light-dark(#ffffff, #1e1e1e);
+  --text-bg: light-dark(#ffffff, #1e1e1e);
+  --elevated-bg: light-dark(#ffffff, #2c2c2e);
+  --grouped-bg: light-dark(#f2f2f7, #1c1c1e);
+  --grouped-secondary-bg: light-dark(#ffffff, #2c2c2e);
+
+  /* Чередующиеся строки таблиц / списков */
+  --row-even-bg: transparent;
+  --row-odd-bg: light-dark(rgba(0, 0, 0, 0.04), rgba(255, 255, 255, 0.05));
+
+  /* FILLS & CONTROLS */
+  --control-surface: light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.25));
+  --fill-primary: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+  --fill-secondary: light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.08));
+  --fill-tertiary: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
+  --fill-quaternary: light-dark(rgba(0, 0, 0, 0.03), rgba(255, 255, 255, 0.03));
+  --fill-quinary: light-dark(rgba(0, 0, 0, 0.015), rgba(255, 255, 255, 0.015));
+
+  --accent-base: var(--system-green);
+  --control-accent-rgb: var(--system-green-rgb);
+
+  --control-accent: light-dark(
+    color-mix(in srgb, var(--accent-base) 85%, #000000),
+    var(--accent-base)
+  );
+  --selected-control: color-mix(
+    in srgb,
+    var(--control-accent) 45%,
+    light-dark(#e5e5ea, #2c2c2e)
+  );
+  --selected-content-bg: light-dark(
+    var(--control-accent),
+    color-mix(in srgb, var(--control-accent) 75%, #000000)
+  );
+  --keyboard-focus-indicator: color-mix(
+    in srgb,
+    var(--control-accent) 50%,
+    transparent
+  );
+  --unemphasized-selected-bg: light-dark(#dcdcdc, #464646);
+  --find-highlight: #ffff00;
+
+  /* SEPARATORS & BORDERS */
+  --separator: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+  --separator-opaque: light-dark(#c6c6c8, #38383a);
+  --grid-color: light-dark(rgba(0, 0, 0, 0.07), rgba(255, 255, 255, 0.07));
+  --window-border: light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.15));
+  --window-inner-glow-color: light-dark(
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0.15)
+  );
+  --window-inner-glow: inset 0 0.5px 0 0 var(--window-inner-glow-color);
+
+  /* VIBRANCY & MATERIALS: цвета (размытие в общих токенах) */
+  --material-sidebar-bg: light-dark(
+    rgba(246, 246, 246, 0.7),
+    rgba(40, 40, 40, 0.65)
+  );
+  --material-header-bg: light-dark(
+    rgba(236, 236, 236, 0.75),
+    rgba(30, 30, 30, 0.75)
+  );
+  --material-popover-bg: light-dark(
+    rgba(255, 255, 255, 0.8),
+    rgba(45, 45, 45, 0.8)
+  );
+  --material-hud-bg: light-dark(
+    rgba(250, 250, 250, 0.85),
+    rgba(20, 20, 20, 0.85)
+  );
+}
+
+[data-accent="red"] {
+  --accent-base: var(--system-red);
+  --control-accent-rgb: var(--system-red-rgb);
+}
+[data-accent="orange"] {
+  --accent-base: var(--system-orange);
+  --control-accent-rgb: var(--system-orange-rgb);
+}
+[data-accent="yellow"] {
+  --accent-base: var(--system-yellow);
+  --control-accent-rgb: var(--system-yellow-rgb);
+  --text-selected: rgba(0, 0, 0, 0.85);
+}
+[data-accent="green"] {
+  --accent-base: var(--system-green);
+  --control-accent-rgb: var(--system-green-rgb);
+}
+[data-accent="mint"] {
+  --accent-base: var(--system-mint);
+  --control-accent-rgb: var(--system-mint-rgb);
+}
+[data-accent="teal"] {
+  --accent-base: var(--system-teal);
+  --control-accent-rgb: var(--system-teal-rgb);
+}
+[data-accent="cyan"] {
+  --accent-base: var(--system-cyan);
+  --control-accent-rgb: var(--system-cyan-rgb);
+}
+[data-accent="blue"] {
+  --accent-base: var(--system-blue);
+  --control-accent-rgb: var(--system-blue-rgb);
+}
+[data-accent="indigo"] {
+  --accent-base: var(--system-indigo);
+  --control-accent-rgb: var(--system-indigo-rgb);
+}
+[data-accent="purple"] {
+  --accent-base: var(--system-purple);
+  --control-accent-rgb: var(--system-purple-rgb);
+}
+[data-accent="pink"] {
+  --accent-base: var(--system-pink);
+  --control-accent-rgb: var(--system-pink-rgb);
+}
+[data-accent="brown"] {
+  --accent-base: var(--system-brown);
+  --control-accent-rgb: var(--system-brown-rgb);
+}
+[data-accent="gray"] {
+  --accent-base: var(--system-gray);
+}
+
+:root,
+[data-theme="dark"] {
+  --system-red-rgb: 255, 69, 58;
+  --system-orange-rgb: 255, 159, 10;
+  --system-yellow-rgb: 255, 214, 10;
+  --system-green-rgb: 50, 215, 75;
+  --system-mint-rgb: 102, 212, 207;
+  --system-teal-rgb: 106, 196, 220;
+  --system-cyan-rgb: 90, 200, 245;
+  --system-blue-rgb: 10, 132, 255;
+  --system-indigo-rgb: 94, 92, 230;
+  --system-purple-rgb: 191, 90, 242;
+  --system-pink-rgb: 255, 55, 95;
+  --system-brown-rgb: 172, 142, 104;
+
+  --glass-edge-opacity: 0;
+}
+
+[data-theme="light"] {
+  --system-red-rgb: 255, 59, 48;
+  --system-orange-rgb: 255, 149, 0;
+  --system-yellow-rgb: 255, 204, 0;
+  --system-green-rgb: 40, 205, 65;
+  --system-mint-rgb: 0, 199, 190;
+  --system-teal-rgb: 89, 173, 196;
+  --system-cyan-rgb: 85, 190, 240;
+  --system-blue-rgb: 0, 122, 255;
+  --system-indigo-rgb: 88, 86, 214;
+  --system-purple-rgb: 175, 82, 222;
+  --system-pink-rgb: 255, 45, 85;
+  --system-brown-rgb: 162, 132, 94;
+
+  --glass-edge-opacity: 0.4;
+}
+
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] {
+    --system-red-rgb: 255, 59, 48;
+    --system-orange-rgb: 255, 149, 0;
+    --system-yellow-rgb: 255, 204, 0;
+    --system-green-rgb: 40, 205, 65;
+    --system-mint-rgb: 0, 199, 190;
+    --system-teal-rgb: 89, 173, 196;
+    --system-cyan-rgb: 85, 190, 240;
+    --system-blue-rgb: 0, 122, 255;
+    --system-indigo-rgb: 88, 86, 214;
+    --system-purple-rgb: 175, 82, 222;
+    --system-pink-rgb: 255, 45, 85;
+    --system-brown-rgb: 162, 132, 94;
+
+    --glass-edge-opacity: 0.4;
+  }
+}

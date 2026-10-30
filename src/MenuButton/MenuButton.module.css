@@ -1,0 +1,226 @@
+.panel,
+.plain {
+  --menu-duration: 200ms;
+  --menu-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.panel {
+  --menu-trigger-tint: var(--fill-tertiary);
+
+  overflow: hidden;
+  transition: background-color var(--menu-duration) var(--menu-easing);
+
+  &:has(.button:hover:not(:disabled)) {
+    --menu-trigger-tint: var(--fill-secondary);
+  }
+
+  &:has(.button:active:not(:disabled)),
+  &:has(.button[aria-expanded="true"]) {
+    --menu-trigger-tint: var(--fill-primary);
+  }
+
+  &:has(.button:disabled) {
+    --menu-trigger-tint: var(--fill-quaternary);
+    opacity: 0.6;
+  }
+
+  &[data-open] {
+    visibility: hidden;
+  }
+}
+
+.button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--label-primary);
+  font: inherit;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--keyboard-focus-indicator);
+    outline-offset: -2px;
+  }
+
+  & > svg {
+    flex: none;
+    transition: opacity 100ms linear;
+  }
+}
+
+.plain {
+  width: auto;
+  min-width: 32px;
+  height: calc(100% - 4px);
+  min-height: 32px;
+  padding: 0 8px;
+  border-radius: var(--CircularCornerRadius);
+  transition: background-color var(--menu-duration) var(--menu-easing);
+
+  &:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  &[data-open] {
+    background: transparent;
+
+    & > svg {
+      opacity: 0;
+    }
+  }
+}
+
+.frame {
+  --menu-radius: 18px;
+  --menu-p: 0;
+  --menu-content: 0;
+  --menu-icon: 1;
+  --menu-padding: 6px;
+  --menu-item-radius: calc(
+    var(--ControlCornerRadius) * 2.5 - var(--menu-padding)
+  );
+  --menu-tint-closed: var(--fill-secondary);
+  --menu-tint-open: color-mix(
+    in srgb,
+    var(--material-popover-bg) 40%,
+    transparent
+  );
+
+  position: fixed;
+  z-index: var(--ZIndexPopup);
+  overflow: hidden;
+  border-radius: var(--menu-radius);
+  color: var(--label-primary);
+  font-size: var(--font-body);
+}
+
+.frame[data-appearance="plain"] .glass {
+  opacity: calc(1 - var(--menu-icon));
+}
+
+.glass {
+  --lg-blur: 2px;
+
+  overflow: hidden;
+}
+
+.icon {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: var(--menu-anchor-w);
+  height: var(--menu-anchor-h);
+  opacity: var(--menu-icon);
+  pointer-events: none;
+}
+
+.menu {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  min-width: 200px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  padding: var(--menu-padding);
+  overflow-y: auto;
+  opacity: var(--menu-content);
+  outline: none;
+}
+
+.frame[data-x="right"] :is(.icon, .menu) {
+  right: 0;
+}
+
+.frame[data-x="left"] :is(.icon, .menu) {
+  left: 0;
+}
+
+.frame[data-y="top"] :is(.icon, .menu) {
+  top: 0;
+}
+
+.frame[data-y="bottom"] :is(.icon, .menu) {
+  bottom: 0;
+}
+
+.item {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  min-height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--menu-item-radius);
+  background: transparent;
+  color: var(--label-primary);
+  font: inherit;
+  text-align: start;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 120ms linear;
+
+  &:hover:not([aria-disabled="true"]),
+  &:focus-visible {
+    background: var(--fill-secondary);
+  }
+
+  &:active:not([aria-disabled="true"]) {
+    background: var(--fill-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--keyboard-focus-indicator);
+    outline-offset: -2px;
+  }
+
+  &[aria-disabled="true"] {
+    color: var(--label-tertiary);
+    cursor: not-allowed;
+  }
+}
+
+.destructive:not([aria-disabled="true"]) {
+  color: var(--system-red);
+}
+
+.itemIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+}
+
+.separator {
+  flex: none;
+  height: 1px;
+  margin: 4px 14px;
+  background: var(--separator);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .plain,
+  .button > svg,
+  .item {
+    transition: none;
+  }
+}

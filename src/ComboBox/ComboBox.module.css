@@ -1,0 +1,263 @@
+.root {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--ControlLabelGap);
+  width: auto;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.labelStart {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--ControlLabelInlineGap);
+}
+
+.label {
+  flex: none;
+  color: var(--label-secondary);
+}
+
+.labelStart .label {
+  display: inline-flex;
+  align-items: center;
+  height: var(--ControlHeight);
+}
+
+.disabled .label {
+  color: var(--label-tertiary);
+}
+
+.fieldWrapper {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ControlLabelGap);
+}
+
+/* Якорь для списка. */
+.field {
+  position: relative;
+  flex: none;
+  min-width: 0;
+}
+
+/* Поле */
+.control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--ControlHeight);
+  padding: 0 5px 0 var(--ControlPaddingInline);
+  border: 1px solid var(--window-border);
+  border-radius: var(--ControlCornerRadius);
+  background-color: var(--fill-tertiary);
+  transition:
+    background-color var(--ControlAnimationDuration)
+      var(--ControlAnimationEasing),
+    border-color var(--ControlAnimationDuration) var(--ControlAnimationEasing);
+}
+
+.control:hover {
+  background-color: var(--fill-secondary);
+}
+
+/* Фокус такой же, как у TextField. */
+.control:focus-within {
+  outline: 2px solid var(--keyboard-focus-indicator);
+  outline-offset: -2px;
+  background-color: var(--fill-primary);
+}
+
+.invalid .control {
+  border-color: var(--system-red);
+}
+
+.invalid .control:focus-within {
+  outline-color: var(--system-red);
+}
+
+.disabled .control,
+.disabled .control:hover {
+  border-color: var(--separator);
+  background-color: var(--fill-quaternary);
+}
+
+/*
+ * Подсказка не влияет на ширину поля: width: 0 убирает её из расчёта ширины
+ * корня, а min-width: 100% растягивает до ширины поля и переносит текст.
+ */
+.hint {
+  width: 0;
+  min-width: 100%;
+  color: var(--label-secondary);
+  overflow-wrap: anywhere;
+}
+
+.invalid .hint {
+  color: var(--system-red);
+}
+
+.disabled .hint {
+  color: var(--label-tertiary);
+}
+
+.input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--label-primary);
+  text-overflow: ellipsis;
+}
+
+.input::placeholder {
+  color: var(--text-placeholder);
+}
+
+.input::selection {
+  background-color: var(--selected-control);
+  color: var(--text-selected);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  color: var(--label-tertiary);
+}
+
+.input:disabled::placeholder {
+  color: var(--label-quaternary);
+}
+
+.button {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--CircularCornerRadius);
+  background: transparent;
+  color: var(--label-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--ControlAnimationDuration)
+      var(--ControlAnimationEasing),
+    color var(--ControlAnimationDuration) var(--ControlAnimationEasing);
+}
+
+.button:hover {
+  background-color: var(--fill-secondary);
+  color: var(--label-primary);
+}
+
+.button:disabled {
+  background: transparent;
+  color: var(--label-tertiary);
+  cursor: default;
+}
+
+.chevron {
+  transition: transform var(--ControlAnimationDuration)
+    var(--ControlAnimationEasing);
+}
+
+.open .chevron {
+  transform: rotate(180deg);
+}
+
+/*
+ * Выпадающий список. Рендерится порталом в document.body
+ * с position: fixed, поэтому его не обрезают родители с overflow.
+ */
+.list {
+  --ComboBoxListShift: -4px;
+  z-index: var(--ZIndexPopup);
+  padding: 4px;
+  background-color: var(--material-popover-bg);
+  -webkit-backdrop-filter: var(--material-blur);
+  backdrop-filter: var(--material-blur);
+  border-radius: var(--ControlCornerRadius);
+  border: 1px solid var(--window-border);
+  box-shadow: var(--window-inner-glow);
+  transform-origin: top center;
+  animation: listIn var(--ControlAnimationDuration)
+    var(--ControlAnimationEasing);
+}
+
+.listTop {
+  --ComboBoxListShift: 4px;
+  transform-origin: bottom center;
+}
+
+@keyframes listIn {
+  from {
+    opacity: 0;
+    transform: translateY(var(--ComboBoxListShift)) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.listbox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-radius: var(--ControlCornerRadius);
+  scrollbar-width: thin;
+  scrollbar-color: var(--label-tertiary) transparent;
+}
+
+.option {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: var(--ControlCornerRadius);
+  color: var(--label-primary);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--ControlAnimationDuration)
+    var(--ControlAnimationEasing);
+}
+
+.optionActive {
+  background-color: var(--fill-primary);
+  color: var(--text-primary);
+}
+
+.option:active {
+  background-color: var(--fill-secondary);
+}
+
+/* Содержимое пункта не шире поля: длинный текст обрезается многоточием. */
+.optionContent {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .list {
+    animation: none;
+  }
+  .control,
+  .button,
+  .chevron,
+  .option {
+    transition: none;
+  }
+}

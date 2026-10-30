@@ -1,0 +1,179 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--ZIndexModal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+}
+
+.overlayOpen {
+  animation: fadeIn var(--ControlAnimationDuration)
+    var(--ControlAnimationEasing) forwards;
+}
+
+.overlayClose {
+  pointer-events: none;
+  animation: fadeOut var(--ControlAnimationDuration)
+    var(--ControlAnimationEasing) forwards;
+}
+
+.modal {
+  transform: translateZ(0);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  max-height: 70%;
+  background-color: var(--elevated-bg);
+  border: 1px solid var(--window-border);
+  box-shadow: var(--window-inner-glow);
+  border-radius: 36px;
+  color: var(--label-primary);
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    width: 100% !important;
+    height: 100%;
+    height: 100dvh;
+    max-height: 100%;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+}
+
+.modal:focus {
+  outline: none;
+}
+
+.modalOpen {
+  animation: scaleIn var(--ControlAnimationDuration)
+    var(--ControlAnimationEasing) forwards;
+}
+
+.modalClose {
+  animation: scaleOut var(--ControlAnimationDuration)
+    var(--ControlAnimationEasing) forwards;
+}
+
+/* 1. Сектор заголовка */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(
+    to bottom,
+    var(--elevated-bg) 0%,
+    var(--elevated-bg) 35%,
+    color-mix(in srgb, var(--elevated-bg) 92%, transparent) 55%,
+    color-mix(in srgb, var(--elevated-bg) 65%, transparent) 75%,
+    color-mix(in srgb, var(--elevated-bg) 25%, transparent) 90%,
+    color-mix(in srgb, var(--elevated-bg) 0%, transparent) 100%
+  );
+  pointer-events: none;
+}
+
+.header > * {
+  pointer-events: auto;
+}
+
+.title {
+  font-weight: 600;
+  color: var(--label-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 2. Сектор тела */
+.body {
+  padding: 78px 16px 16px 16px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  color: var(--label-secondary);
+}
+
+.bodyNoFooter {
+  padding-bottom: 20px;
+}
+
+/* 3. Сектор кнопки действия */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 8px 16px 16px 16px;
+  background-color: var(--elevated-bg);
+}
+
+.footer > :not(.footerError) {
+  flex: none;
+}
+
+.footerError {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--system-red);
+  overflow-wrap: anywhere;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: translateZ(0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateZ(0) scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: translateZ(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateZ(0) scale(0.96);
+  }
+}
+
+/* Сокращаем анимацию вместо animation: none, чтобы срабатывал onAnimationEnd и размонтировал окно */
+@media (prefers-reduced-motion: reduce) {
+  .overlayOpen,
+  .overlayClose,
+  .modalOpen,
+  .modalClose {
+    animation-duration: 0.01ms;
+  }
+}

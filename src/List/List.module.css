@@ -1,0 +1,240 @@
+/*
+ * Список: вертикальные строки, сетка карточек или горизонтальная лента.
+ * Элементы виртуализированы: в DOM только те, что на экране и рядом с ним.
+ *
+ * По умолчанию (vertical и grid без height) список прокручивается вместе со страницей.
+ * Горизонтальная лента всегда прокручивается внутри себя и может уходить под плавающую панель
+ * NavigationView (extendContentUnderPane).
+ *
+ * Настройка (переменные на корне):
+ *   --list-item-radius  скругление строки или карточки (по умолчанию 8px)
+ *   --list-card-bg      фон карточки (по умолчанию var(--elevated-bg))
+ */
+.root {
+  --list-item-radius: 8px;
+  --list-card-bg: var(--elevated-bg);
+  --list-edge-start: 0px;
+  --list-edge-end: 0px;
+
+  position: relative;
+  min-width: 0;
+  color: var(--label-primary);
+  outline: none;
+}
+
+.containedScroll {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Внутренний скроллер (vertical и grid с фиксированной height) */
+.scroller {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  outline: none;
+}
+
+/* ───────────── Тело ───────────── */
+
+.body {
+  position: relative;
+}
+
+/* Линия: строка в vertical, ряд карточек в grid. Стоит на месте через transform. */
+.line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+}
+
+/* Линия horizontal: одна карточка */
+.lineH {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* ───────────── Горизонтальная лента ───────────── */
+
+/*
+ * Лента тянется влево на safe area NavigationView (--nav-safe-left) и на отступ страницы
+ * (--page-padding), а внутренний отступ скроллера возвращает первую карточку на место.
+ * В покое лента выглядит как обычный блок, а при прокрутке карточки уходят под панель.
+ * Вне NavigationView / Page обе переменные равны 0, и ничего не меняется.
+ */
+.bleed {
+  --list-edge-start: calc(var(--nav-safe-left, 0px) + var(--page-padding, 0px));
+  --list-edge-end: var(--page-padding, 0px);
+
+  margin-inline: calc(var(--list-edge-start) * -1)
+    calc(var(--list-edge-end) * -1);
+}
+
+.hScroller {
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-inline: var(--list-edge-start) var(--list-edge-end);
+  /* Сфокусированная или прокручиваемая к виду карточка не прячется под панелью */
+  scroll-padding-inline-start: var(--list-edge-start);
+  scrollbar-width: thin;
+  outline: none;
+}
+
+.track {
+  flex: none;
+}
+
+/* ───────────── Элемент ───────────── */
+
+.item {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Рамка по умолчанию: пользователь не рисует наведение, выбор и фокус сам */
+.itemRow,
+.itemCard {
+  border-radius: var(--list-item-radius);
+  user-select: none;
+  transition: background-color var(--ControlAnimationDuration)
+    var(--ControlAnimationEasing);
+}
+
+/* Строка: контент по центру по вертикали, как строка таблицы */
+.itemRow {
+  display: flex;
+  align-items: center;
+  padding-inline: 12px;
+}
+
+.itemRow:hover {
+  background-color: var(--fill-secondary);
+}
+
+.itemRow.selected {
+  background-color: color-mix(in srgb, var(--control-accent) 14%, transparent);
+}
+
+.itemRow.selected:hover {
+  background-color: color-mix(in srgb, var(--control-accent) 22%, transparent);
+}
+
+/* Плашка слева у выбранной строки, как у выбранной строки DataGrid */
+.itemRow.selected::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 16px;
+  border-radius: var(--CircularCornerRadius);
+  background-color: var(--control-accent);
+  transform: translateY(-50%);
+}
+
+/* Карточка: контент заполняет её целиком */
+.itemCard {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--list-card-bg);
+}
+
+.itemRow > :only-child,
+.itemCard > :only-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.itemCard:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--list-card-bg),
+    var(--label-primary) 5%
+  );
+}
+
+.itemCard.selected {
+  background-color: color-mix(
+    in srgb,
+    var(--list-card-bg),
+    var(--control-accent) 10%
+  );
+}
+
+/* Рамка карточки рисуется поверх контента, иначе картинка её закрывает */
+.itemCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--separator);
+  pointer-events: none;
+  transition: box-shadow var(--ControlAnimationDuration)
+    var(--ControlAnimationEasing);
+}
+
+.itemCard.selected::after {
+  box-shadow: inset 0 0 0 2px var(--control-accent);
+}
+
+/* Курсор клавиатуры виден только когда список в фокусе с клавиатуры. */
+.focusTarget:focus-visible .active {
+  outline: 2px solid var(--keyboard-focus-indicator);
+  outline-offset: -2px;
+}
+
+/* ───────────── Подгрузка и пустой список ───────────── */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 0;
+}
+
+/* Подгрузка в horizontal: место за последней карточкой */
+.footerH {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.footerError {
+  color: var(--system-red, var(--label-secondary));
+}
+
+.empty {
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+  padding: 24px;
+  color: var(--label-secondary);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .itemRow,
+  .itemCard,
+  .itemCard::after {
+    transition: none;
+  }
+}

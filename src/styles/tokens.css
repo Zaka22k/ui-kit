@@ -1,0 +1,70 @@
+:root {
+  /* CornerRadius */
+  --CircularCornerRadius: 9999px;
+  --ControlCornerRadius: 8px;
+
+  /* Size: общие размеры полей ввода (TextField, ComboBox) */
+  --ControlHeight: 32px;
+  --ControlPaddingInline: 10px;
+  --ControlLabelGap: 6px;
+  --ControlLabelInlineGap: 12px;
+
+  --ZIndexModal: 1000;
+  --ZIndexPopup: 1100;
+
+  /* Animation */
+  --ControlAnimationDuration: 200ms;
+  --ControlAnimationEasing: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Font Size */
+  --font-caption: 0.75rem;
+  --font-body: 0.875rem;
+  --font-body-large: 1.125rem;
+  --font-subtitle: 1.25rem;
+  --font-title: 1.75rem;
+  --font-title-lg: 2.5rem;
+
+  @media (max-width: 768px) {
+    --font-body-large: 1rem;
+    --font-subtitle: 1.125rem;
+    --font-title: 1.375rem;
+    --font-title-lg: 1.75rem;
+  }
+
+  /* VIBRANCY & MATERIALS */
+  --material-blur: blur(20px) saturate(180%);
+}
+
+/* ───────────── Типография ───────────── */
+
+.CaptionTextBlockStyle {
+  font-size: var(--font-caption);
+}
+
+.BodyTextBlockStyle {
+  font-size: var(--font-body);
+
+  &.BodyStrongTextBlockStyle {
+    font-weight: 600;
+  }
+}
+
+.BodyLargeTextBlockStyle {
+  font-size: var(--font-body-large);
+
+  &.BodyLargeStrongTextBlockStyle {
+    font-weight: 600;
+  }
+}
+
+.SubtitleTextBlockStyle {
+  font-size: var(--font-subtitle);
+}
+
+.TitleTextBlockStyle {
+  font-size: var(--font-title);
+}
+
+.TitleLargeTextBlockStyle {
+  font-size: var(--font-title-lg);
+}

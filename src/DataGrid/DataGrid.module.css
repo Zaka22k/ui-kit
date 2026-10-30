@@ -1,0 +1,423 @@
+/*
+ * Таблица без границ: единственная линия — разделитель между строками.
+ * У полосатой таблицы (striped) разделителей нет, строки различаются заливкой.
+ *
+ * По умолчанию (режим .pageScroll) таблица скроллится вместе со страницей:
+ * шапка фиксируется под заголовком страницы (--DataGridStickyTop, по умолчанию 64px),
+ * а строки проходят под шапкой таблицы и под градиентом заголовка страницы.
+ */
+.root {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 160px;
+  color: var(--label-primary);
+  outline: none;
+}
+
+.containedScroll {
+  overflow: hidden;
+}
+
+/* Внутренний скроллер (используется только если задан фиксированный height) */
+.scroller {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  outline: none;
+}
+
+/* В режиме скролла со страницей шапка липнет к скроллеру страницы */
+.headerScroller {
+  position: sticky;
+  /*
+   * Приоритет: проп stickyTop, затем высота хедера Page (--page-header-height, константа
+   * на .page), затем --DataGridStickyTop, затем 64px.
+   */
+  top: var(
+    --dg-sticky-top,
+    var(--page-header-height, var(--DataGridStickyTop, 64px))
+  );
+  z-index: 3;
+  overflow: hidden;
+  /*
+   * Фон и блюр те же, что у хедера Page (--sticky-header-*, их задаёт .page).
+   * Вне Page действуют прежние значения.
+   */
+  background-color: var(
+    --DataGridHeaderBackground,
+    var(--sticky-header-bg, var(--material-header-bg))
+  );
+  -webkit-backdrop-filter: var(--material-blur);
+  backdrop-filter: var(--material-blur);
+  box-shadow: inset 0 -1px 0 var(--separator);
+}
+
+/*
+ * Шапка прилипла под хедером Page: подложку (фон и блюр) за неё рисует сам хедер,
+ * растянутый вниз на высоту шапки. Два соседних блюра дали бы видимый шов на стыке,
+ * а один общий шва не имеет. Шапка поднимается над хедером (его z-index 5), чтобы
+ * подписи колонок рисовались поверх растянутой подложки.
+ */
+.stuck .headerScroller {
+  z-index: 6;
+  background-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.containedScroll .headerScroller {
+  top: 0;
+  background-color: var(--DataGridHeaderBackground, var(--window-bg));
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.striped .headerScroller {
+  box-shadow: none;
+}
+
+/* Горизонтальный скроллер тела в режиме скролла страницы */
+.bodyScroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Холст: не уже суммы ширин колонок, иначе растягивается на всё окно. */
+.canvas {
+  position: relative;
+  width: 100%;
+  min-width: var(--dg-min-width);
+}
+
+/* ───────────── Выход под плавающую панель (режим скролла со страницей) ───────────── */
+
+/*
+ * Таблица растягивается влево на safe area NavigationView (--nav-safe-left) и на отступ
+ * страницы (--page-padding), а внутренние отступы скроллеров возвращают колонки на место.
+ * В покое таблица выглядит как раньше, а при горизонтальной прокрутке колонки уходят
+ * под панель. Фоны, разделители и шапка тянутся до края окна.
+ * Вне NavigationView / Page обе переменные равны 0, и ничего не меняется.
+ */
+.bleed {
+  --dg-edge-start: calc(var(--nav-safe-left, 0px) + var(--page-padding, 0px));
+  --dg-edge-end: var(--page-padding, 0px);
+
+  margin-inline: calc(var(--dg-edge-start) * -1) calc(var(--dg-edge-end) * -1);
+}
+
+.bleed .headerScroller,
+.bleed .bodyScroller {
+  box-sizing: border-box;
+  padding-inline: var(--dg-edge-start) var(--dg-edge-end);
+  /* Сфокусированное или прокручиваемое к виду не прячется под панелью */
+  scroll-padding-inline-start: var(--dg-edge-start);
+}
+
+/* Строка тянется на всю ширину таблицы вместе с отступами, колонки остаются на месте */
+.bleed .row {
+  box-sizing: border-box;
+  left: calc(var(--dg-edge-start) * -1);
+  right: calc(var(--dg-edge-end) * -1);
+  padding-inline: var(--dg-edge-start) var(--dg-edge-end);
+}
+
+/* Плашка выделения стоит у начала колонок, а не у края окна под панелью */
+.bleed .rowSelected::before {
+  left: var(--dg-edge-start);
+}
+
+/* Подгрузка: центрируем в видимой части и прилипаем к краю панели */
+.bleed .footer {
+  left: var(--dg-edge-start);
+}
+
+/* ───────────── Шапка ───────────── */
+
+.header {
+  display: grid;
+  grid-template-columns: var(--dg-columns);
+  width: 100%;
+  min-width: var(--dg-min-width);
+  height: var(--dg-header-height);
+}
+
+.headerCell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0 12px;
+  color: var(--label-secondary);
+  user-select: none;
+}
+
+.headerText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ручка изменения ширины: у правого края ячейки шапки, линия видна при наведении. */
+.resizeHandle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+
+.resizeHandle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 3px;
+  width: 2px;
+  height: 16px;
+  border-radius: var(--CircularCornerRadius);
+  background-color: var(--label-tertiary);
+  opacity: 0;
+  transform: translateY(-50%);
+  transition:
+    opacity var(--ControlAnimationDuration) var(--ControlAnimationEasing),
+    background-color var(--ControlAnimationDuration)
+      var(--ControlAnimationEasing);
+}
+
+.headerCell:hover .resizeHandle::after,
+.resizeHandle:focus-visible::after,
+.resizing::after {
+  opacity: 1;
+}
+
+.resizeHandle:focus-visible::after {
+  background-color: var(--keyboard-focus-indicator);
+}
+
+.resizing::after {
+  background-color: var(--control-accent);
+}
+
+/* ───────────── Строки ───────────── */
+
+.body {
+  position: relative;
+}
+
+/*
+ * Строка стоит на своём месте через transform: когда у неё меняется индекс, в режиме .moving
+ * она плавно съезжает. Строки, которые впервые попали в окно при прокрутке, не анимируются.
+ */
+.row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: var(--dg-columns);
+  height: var(--dg-row-height);
+  box-shadow: inset 0 -1px 0 var(--separator);
+  transition: background-color var(--ControlAnimationDuration)
+    var(--ControlAnimationEasing);
+}
+
+.striped .row {
+  box-shadow: none;
+}
+
+.striped .rowOdd {
+  background-color: var(--row-odd-bg);
+}
+
+.row:hover {
+  background-color: var(--fill-secondary);
+}
+
+.striped .rowOdd:hover {
+  background-color: var(--fill-secondary);
+}
+
+/* Выделенная строка: акцентная заливка и плашка слева, как у выбранного пункта ComboBox. */
+.row.rowSelected {
+  background-color: color-mix(in srgb, var(--control-accent) 14%, transparent);
+}
+
+.striped .row.rowSelected {
+  background-color: color-mix(
+    in srgb,
+    var(--control-accent) 14%,
+    var(--row-odd-bg)
+  );
+}
+
+.row.rowSelected:hover {
+  background-color: color-mix(in srgb, var(--control-accent) 22%, transparent);
+}
+
+.striped .row.rowSelected:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--control-accent) 22%,
+    var(--fill-secondary)
+  );
+}
+
+.rowSelected::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 16px;
+  border-radius: var(--CircularCornerRadius);
+  background-color: var(--control-accent);
+  transform: translateY(-50%);
+}
+
+/* Курсор клавиатуры виден только когда таблица в фокусе с клавиатуры. */
+.root:focus-visible .rowActive,
+.scroller:focus-visible .rowActive {
+  outline: 2px solid var(--keyboard-focus-indicator);
+  outline-offset: -2px;
+}
+
+/* ───────────── Ячейки ───────────── */
+
+.cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0 12px;
+  overflow: hidden;
+}
+
+.cellContent {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selectCell {
+  justify-content: center;
+  padding: 0;
+  user-select: none;
+}
+
+/* ───────────── Появление и исчезновение строк ───────────── */
+
+.moving .row {
+  transition:
+    transform var(--ControlAnimationDuration) var(--ControlAnimationEasing),
+    background-color var(--ControlAnimationDuration)
+      var(--ControlAnimationEasing);
+}
+
+.rowNew {
+  animation: rowIn var(--ControlAnimationDuration) ease-out;
+}
+
+.rowNew::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: color-mix(in srgb, var(--control-accent) 20%, transparent);
+  pointer-events: none;
+  animation: rowHighlight 1500ms ease-out forwards;
+}
+
+.rowExit {
+  z-index: 0;
+  pointer-events: none;
+  animation: rowOut 150ms ease-out forwards;
+}
+
+@keyframes rowIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rowHighlight {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes rowOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ───────────── Подгрузка и пустая таблица ───────────── */
+
+.footer {
+  position: sticky;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: var(--dg-row-height);
+}
+
+.footerError {
+  color: var(--system-red, var(--label-secondary));
+}
+
+.empty {
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+  padding: 24px;
+  color: var(--label-secondary);
+  text-align: center;
+  pointer-events: none;
+}
+
+.containedScroll .empty {
+  position: absolute;
+  top: var(--dg-header-height);
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row,
+  .moving .row {
+    transition: background-color var(--ControlAnimationDuration)
+      var(--ControlAnimationEasing);
+  }
+
+  .rowNew,
+  .rowExit {
+    animation: none;
+  }
+
+  .rowExit {
+    display: none;
+  }
+
+  .resizeHandle::after {
+    transition: none;
+  }
+}
