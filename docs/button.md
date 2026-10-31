@@ -1,36 +1,44 @@
 # Button
 
-Кнопка на основе стеклянной подложки `LiquidGlass` и нативного элемента `<button>`, поддерживающая три варианта оформления (`normal`, `primary`, `destructive`) и два режима отображения: текстовый или только с иконкой.
+Кнопка на основе нативного элемента `<button>`, поддерживающая три варианта оформления (`normal`, `primary`, `destructive`) и два режима отображения: текстовый или только с иконкой.
 
 ## Параметры
 
-| Название параметра | Тип | Описание |
-| --- | --- | --- |
-| `appearance` | `"normal" \| "primary" \| "destructive"` | Визуальный стиль кнопки. По умолчанию `"normal"` (полупрозрачная заливка). `"primary"` — сплошная акцентная заливка для главных действий, `"destructive"` — для опасных действий (удаление, отмена) с критическим красным текстом. |
-| `children` | `ReactNode` | Текстовое содержимое кнопки. Нельзя использовать одновременно с `icon`. |
-| `icon` | `ReactNode` | Иконка кнопки (20×20px). Включает квадратный режим «только иконка» и требует обязательного указания `aria-label`. |
-| `aria-label` | `string` | Обязательная текстовая метка для доступности при использовании параметра `icon`. |
-| `width` | `number \| string` | Ширина кнопки (число трактуется как пиксели). По умолчанию `"auto"`. Игнорируется в режиме иконки. |
-| `height` | `number \| string` | Высота кнопки. По умолчанию `36`. В режиме `icon` задаёт также и ширину, делая кнопку квадратной. |
-| `type` | `"button" \| "submit" \| "reset"` | Нативный тип кнопки. По умолчанию `"button"`. При `"submit"` кнопка автоматически переходит в состояние `disabled` во время отправки формы (`useFormStatus`). |
-| `disabled` | `boolean` | Отключает кнопку, блокирует интерактивность подложки `LiquidGlass` и пересчёт карт преломления. |
-| `className` | `string` | Пользовательский CSS-класс. Применяется к внешней обёртке `LiquidGlass`, а не к нативному `<button>`. |
-| `style` | `CSSProperties` | Инлайн-стили. Применяются к внешней обёртке `LiquidGlass`. |
-| `ref` | `Ref<HTMLButtonElement>` | Ссылка, указывающая напрямую на нативный элемент `<button>`. |
-| `...props` | `ButtonHTMLAttributes<HTMLButtonElement>` | Остальные стандартные атрибуты (`onClick`, `title`, `form`, `formAction`, `data-*`, `aria-*`) передаются в нативный `<button>`. |
+| Название параметра | Тип                                       | Описание                                                                                                                                                                                                                           |
+| ------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `appearance`       | `"normal" \| "primary" \| "destructive"`  | Визуальный стиль кнопки. По умолчанию `"normal"` (полупрозрачная заливка). `"primary"` — сплошная акцентная заливка для главных действий, `"destructive"` — для опасных действий (удаление, отмена) с критическим красным текстом. |
+| `children`         | `ReactNode`                               | Текстовое содержимое кнопки. Нельзя использовать одновременно с `icon`.                                                                                                                                                            |
+| `icon`             | `ReactNode`                               | Иконка кнопки (20×20px). Включает квадратный режим «только иконка» и требует обязательного указания `aria-label`.                                                                                                                  |
+| `aria-label`       | `string`                                  | Обязательная текстовая метка для доступности при использовании параметра `icon`.                                                                                                                                                   |
+| `width`            | `number \| string`                        | Ширина кнопки (число трактуется как пиксели). По умолчанию `"auto"`. Игнорируется в режиме иконки.                                                                                                                                 |
+| `height`           | `number \| string`                        | Высота кнопки. По умолчанию `36`. В режиме `icon` задаёт также и ширину, делая кнопку квадратной.                                                                                                                                  |
+| `type`             | `"button" \| "submit" \| "reset"`         | Нативный тип кнопки. По умолчанию `"button"`. При `"submit"` кнопка автоматически переходит в состояние `disabled` во время отправки формы (`useFormStatus`).                                                                      |
+| `disabled`         | `boolean`                                 | Отключает кнопку, блокирует интерактивность подложки `LiquidGlass` и пересчёт карт преломления.                                                                                                                                    |
+| `className`        | `string`                                  | Пользовательский CSS-класс. Применяется к внешней обёртке `LiquidGlass`, а не к нативному `<button>`.                                                                                                                              |
+| `style`            | `CSSProperties`                           | Инлайн-стили. Применяются к внешней обёртке `LiquidGlass`.                                                                                                                                                                         |
+| `ref`              | `Ref<HTMLButtonElement>`                  | Ссылка, указывающая напрямую на нативный элемент `<button>`.                                                                                                                                                                       |
+| `...props`         | `ButtonHTMLAttributes<HTMLButtonElement>` | Остальные стандартные атрибуты (`onClick`, `title`, `form`, `formAction`, `data-*`, `aria-*`) передаются в нативный `<button>`.                                                                                                    |
 
 ## Быстрый старт
 
 ```tsx
-import Button from "./Button";
+import Button from "@ui-kit/components";
 
 export default function App() {
   return (
     <div style={{ display: "flex", gap: 12 }}>
       <Button onClick={() => console.log("Saved")}>Сохранить</Button>
-      <Button appearance="primary" onClick={() => console.log("Sent")}>Отправить</Button>
-      <Button appearance="destructive" onClick={() => console.log("Deleted")}>Удалить</Button>
-      <Button icon={<PlusIcon />} aria-label="Добавить" onClick={() => console.log("Added")} />
+      <Button appearance="primary" onClick={() => console.log("Sent")}>
+        Отправить
+      </Button>
+      <Button appearance="destructive" onClick={() => console.log("Deleted")}>
+        Удалить
+      </Button>
+      <Button
+        icon={<PlusIcon />}
+        aria-label="Добавить"
+        onClick={() => console.log("Added")}
+      />
     </div>
   );
 }
@@ -39,6 +47,7 @@ export default function App() {
 ## Примеры использования
 
 ### 1. Управление размерами
+
 Вы можете задавать фиксированную или адаптивную ширину и высоту. Внутреннее содержимое всегда выравнивается по центру с отступами `5px 12px`.
 
 ```tsx
@@ -48,19 +57,21 @@ export default function App() {
 ```
 
 ### 2. Кнопка-иконка
+
 В режиме иконки кнопка становится квадратной (ширина приравнивается к `height`). Иконка рендерится в контейнере 20×20px и наследует `currentColor`.
 
 ```tsx
 <Button icon={<SettingsIcon />} aria-label="Настройки" />
-<Button 
-  icon={<TrashIcon />} 
-  appearance="destructive" 
-  aria-label="Удалить" 
-  height={32} 
+<Button
+  icon={<TrashIcon />}
+  appearance="destructive"
+  aria-label="Удалить"
+  height={32}
 />
 ```
 
 ### 3. Работа с формами (Next.js / React 19)
+
 Компонент интегрирован с хуком `useFormStatus` из `react-dom`: кнопка с `type="submit"` автоматически блокируется (`disabled`), пока форма находится в состоянии `pending`. Рекомендуется задавать фиксированную `width`, если текст кнопки меняется при отправке, чтобы избежать лишнего пересчёта стеклянной подложки.
 
 ```tsx
@@ -68,13 +79,12 @@ export default function App() {
   <Button type="submit" appearance="primary" width={140}>
     Сохранить
   </Button>
-  <Button type="reset">
-    Сбросить
-  </Button>
+  <Button type="reset">Сбросить</Button>
 </form>
 ```
 
 ### 4. Позиционирование и управление фокусом
+
 Так как `className` и `style` попадают на внешнюю обёртку `LiquidGlass`, используйте их для позиционирования во флекс- или грид-контейнерах, а `ref` — для программного фокуса на самом `<button>`.
 
 ```tsx
@@ -87,7 +97,7 @@ const buttonRef = useRef<HTMLButtonElement>(null);
   onClick={() => buttonRef.current?.focus()}
 >
   Далее
-</Button>
+</Button>;
 ```
 
 ## Ограничения

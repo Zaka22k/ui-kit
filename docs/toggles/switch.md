@@ -1,27 +1,27 @@
 # Switch
 
-Переключатель (тумблер) на основе нативного `<input type="checkbox" role="switch">` и ползунка из жидкого стекла `LiquidGlass`, который становится полупрозрачным во время нажатия и скольжения.
+Переключатель (тумблер) на основе нативного `<input type="checkbox" role="switch">`, который становится полупрозрачным во время нажатия и скольжения.
 
 ## Параметры
 
-| Название параметра | Тип | Описание |
-| --- | --- | --- |
-| `label` | `ReactNode` | Текстовая подпись рядом с переключателем. Значения `undefined`, `null` и `false` не рендерятся. Без подписи укажите `aria-label`. |
-| `labelPlacement` | `"end" \| "start"` | Положение подписи: `"end"` (по умолчанию, справа от переключателя) или `"start"` (слева от переключателя). |
-| `size` | `"regular" \| "mini"` | Размер переключателя: `"regular"` (`56×32px`, по умолчанию) или компактный `"mini"` (`45×22px`) для плотных списков. |
-| `checked` | `boolean` | Состояние переключателя в контролируемом режиме. |
-| `defaultChecked` | `boolean` | Начальное состояние в неконтролируемом режиме (синхронизируется с DOM при изменении пропа). |
-| `onChange` | `ChangeEventHandler<HTMLInputElement>` | Обработчик переключения состояния. |
-| `disabled` | `boolean` | Отключает переключатель. Также автоматически блокируется во время отправки родительской формы (`useFormStatus`). |
-| `className` | `string` | Пользовательский CSS-класс. Применяется к корневому элементу `<label>`. |
-| `style` | `CSSProperties` | Инлайн-стили. Применяются к корневому элементу `<label>` (поверх CSS-переменных габаритов `--switch-*`). |
-| `ref` | `Ref<HTMLInputElement>` | Ссылка на нативный элемент `<input type="checkbox" role="switch">`. |
-| `...rest` | `Omit<InputHTMLAttributes<HTMLInputElement>, "type" \| "role" \| "size" \| "children" \| "className" \| "style">` | Остальные нативные атрибуты `<input>` (`name`, `value`, `onKeyDown`, `onKeyUp`, `onBlur`, `aria-*` и др.). |
+| Название параметра | Тип                                                                                                               | Описание                                                                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `label`            | `ReactNode`                                                                                                       | Текстовая подпись рядом с переключателем. Значения `undefined`, `null` и `false` не рендерятся. Без подписи укажите `aria-label`. |
+| `labelPlacement`   | `"end" \| "start"`                                                                                                | Положение подписи: `"end"` (по умолчанию, справа от переключателя) или `"start"` (слева от переключателя).                        |
+| `size`             | `"regular" \| "mini"`                                                                                             | Размер переключателя: `"regular"` (`56×32px`, по умолчанию) или компактный `"mini"` (`45×22px`) для плотных списков.              |
+| `checked`          | `boolean`                                                                                                         | Состояние переключателя в контролируемом режиме.                                                                                  |
+| `defaultChecked`   | `boolean`                                                                                                         | Начальное состояние в неконтролируемом режиме (синхронизируется с DOM при изменении пропа).                                       |
+| `onChange`         | `ChangeEventHandler<HTMLInputElement>`                                                                            | Обработчик переключения состояния.                                                                                                |
+| `disabled`         | `boolean`                                                                                                         | Отключает переключатель. Также автоматически блокируется во время отправки родительской формы (`useFormStatus`).                  |
+| `className`        | `string`                                                                                                          | Пользовательский CSS-класс. Применяется к корневому элементу `<label>`.                                                           |
+| `style`            | `CSSProperties`                                                                                                   | Инлайн-стили. Применяются к корневому элементу `<label>` (поверх CSS-переменных габаритов `--switch-*`).                          |
+| `ref`              | `Ref<HTMLInputElement>`                                                                                           | Ссылка на нативный элемент `<input type="checkbox" role="switch">`.                                                               |
+| `...rest`          | `Omit<InputHTMLAttributes<HTMLInputElement>, "type" \| "role" \| "size" \| "children" \| "className" \| "style">` | Остальные нативные атрибуты `<input>` (`name`, `value`, `onKeyDown`, `onKeyUp`, `onBlur`, `aria-*` и др.).                        |
 
 ## Быстрый старт
 
 ```tsx
-import { Switch } from "./Toggles";
+import { Switch } from "@ui-kit/components";
 
 export default function App() {
   return (
@@ -37,6 +37,7 @@ export default function App() {
 ## Примеры использования
 
 ### 1. Размеры (`regular` и `mini`)
+
 Используйте стандартный размер `regular` (`32px` в высоту, вровень с кнопками и полями ввода) для обычных форм и `mini` (`22px` в высоту) для компактных таблиц или панелей инструментов.
 
 ```tsx
@@ -45,6 +46,7 @@ export default function App() {
 ```
 
 ### 2. Строка настроек с подписью слева и настройкой прозрачности стекла
+
 При нажатии (мышью, тачем или удержанием клавиши `Space`) и во время переезда ползунок `LiquidGlass` становится прозрачным, преломляя фон под дорожкой. Степень прозрачности можно переопределить через CSS-переменную `--SwitchThumbSwitchingOpacity` в пропе `style`.
 
 ```tsx
@@ -55,15 +57,18 @@ const [darkMode, setDarkMode] = useState(true);
   labelPlacement="start"
   checked={darkMode}
   onChange={(e) => setDarkMode(e.target.checked)}
-  style={{
-    width: "100%",
-    justifyContent: "space-between",
-    "--SwitchThumbSwitchingOpacity": "4%",
-  } as React.CSSProperties}
-/>
+  style={
+    {
+      width: "100%",
+      justifyContent: "space-between",
+      "--SwitchThumbSwitchingOpacity": "4%",
+    } as React.CSSProperties
+  }
+/>;
 ```
 
 ### 3. Использование в формах (Next.js / React 19)
+
 Как и нативный чекбокс, включённый `Switch` отправляет в `FormData` своё значение `value` (по умолчанию `"on"`), а на время работы Server Action автоматически переходит в `disabled`.
 
 ```tsx

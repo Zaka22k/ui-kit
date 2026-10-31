@@ -6,43 +6,47 @@
 
 ### 1. Свойства `Modal` (`ModalProps`)
 
-| Название параметра | Тип | Описание |
-| --- | --- | --- |
-| `isOpen` | `boolean` | Управляет открытием окна. При закрытии проигрывается выходная анимация, после чего окно размонтируется из DOM (`onAnimationEnd`). |
-| `onClose` | `() => void` | Вызывается при запросе на закрытие окна (кнопка-крестик, клавиша `Escape`, клик по фону или успешное завершение действия). |
-| `title` | `ReactNode` | Заголовок модального окна в шапке (`aria-labelledby`). |
-| `children` | `ReactNode \| ((props: ModalFormRenderProps) => ReactNode)` | Содержимое окна: обычный JSX (например, для диалога подтверждения) или render-функция для интеграции с формой. |
-| `actionText` | `string` | Текст кнопки основного действия в футере. Если передан `onAction` или `children`-функция без `actionText`, по умолчанию выводится `"Подтвердить"`. |
-| `actionAppearance` | `"normal" \| "primary" \| "destructive"` | Визуальный вариант кнопки действия (`ButtonAppearance`). По умолчанию `"primary"`. |
-| `onAction` | `() => void \| Promise<void>` | Обработчик нажатия на кнопку действия в футере (если внутри не зарегистрирован обработчик формы через `registerAction`). |
-| `onError` | `(error: unknown) => void` | Колбэк, вызываемый при перехвате исключения из `onAction` или `registerAction`. |
-| `errorMessage` | `ReactNode \| ((error: unknown) => ReactNode)` | Сообщение или функция форматирования ошибки для отображения в футере (`role="alert"`), если действие завершилось исключением. По умолчанию `"Не удалось выполнить действие. Попробуйте ещё раз."`. |
-| `width` | `number \| string` | Ширина окна (число означает пиксели). По умолчанию `480`. На мобильных экранах (по стилям) растягивается на весь экран. |
-| `closeOnBackdropClick` | `boolean` | Разрешает закрытие окна кликом по затемнённому фону (оверлею). По умолчанию `true`. |
+| Название параметра     | Тип                                                         | Описание                                                                                                                                                                                           |
+| ---------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isOpen`               | `boolean`                                                   | Управляет открытием окна. При закрытии проигрывается выходная анимация, после чего окно размонтируется из DOM (`onAnimationEnd`).                                                                  |
+| `onClose`              | `() => void`                                                | Вызывается при запросе на закрытие окна (кнопка-крестик, клавиша `Escape`, клик по фону или успешное завершение действия).                                                                         |
+| `title`                | `ReactNode`                                                 | Заголовок модального окна в шапке (`aria-labelledby`).                                                                                                                                             |
+| `children`             | `ReactNode \| ((props: ModalFormRenderProps) => ReactNode)` | Содержимое окна: обычный JSX (например, для диалога подтверждения) или render-функция для интеграции с формой.                                                                                     |
+| `actionText`           | `string`                                                    | Текст кнопки основного действия в футере. Если передан `onAction` или `children`-функция без `actionText`, по умолчанию выводится `"Подтвердить"`.                                                 |
+| `actionAppearance`     | `"normal" \| "primary" \| "destructive"`                    | Визуальный вариант кнопки действия (`ButtonAppearance`). По умолчанию `"primary"`.                                                                                                                 |
+| `onAction`             | `() => void \| Promise<void>`                               | Обработчик нажатия на кнопку действия в футере (если внутри не зарегистрирован обработчик формы через `registerAction`).                                                                           |
+| `onError`              | `(error: unknown) => void`                                  | Колбэк, вызываемый при перехвате исключения из `onAction` или `registerAction`.                                                                                                                    |
+| `errorMessage`         | `ReactNode \| ((error: unknown) => ReactNode)`              | Сообщение или функция форматирования ошибки для отображения в футере (`role="alert"`), если действие завершилось исключением. По умолчанию `"Не удалось выполнить действие. Попробуйте ещё раз."`. |
+| `width`                | `number \| string`                                          | Ширина окна (число означает пиксели). По умолчанию `480`. На мобильных экранах (по стилям) растягивается на весь экран.                                                                            |
+| `closeOnBackdropClick` | `boolean`                                                   | Разрешает закрытие окна кликом по затемнённому фону (оверлею). По умолчанию `true`.                                                                                                                |
 
 ### 2. Аргументы функции `children` / `content` (`ModalFormRenderProps`)
 
-| Название параметра | Тип | Описание |
-| --- | --- | --- |
-| `formId` | `string` | Сгенерированный `id`, который нужно передать тегу `<form id={formId}>`. Связывает кнопку в футере и нажатие `Enter` в текстовых полях с нативной валидацией (`requestSubmit` / `reportValidity`) и отправкой этой формы. |
-| `isSubmitting` | `boolean` | Флаг активного выполнения асинхронного действия (`true` во время работы `onAction` / `registerAction`). Используется для блокировки полей формы (`disabled={isSubmitting}`). |
-| `registerAction` | `(fn: () => void \| Promise<void>) => void` | Регистрирует функцию отправки изнутри компонента формы. Имеет приоритет над внешним `onAction`. |
+| Название параметра | Тип                                         | Описание                                                                                                                                                                                                                 |
+| ------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `formId`           | `string`                                    | Сгенерированный `id`, который нужно передать тегу `<form id={formId}>`. Связывает кнопку в футере и нажатие `Enter` в текстовых полях с нативной валидацией (`requestSubmit` / `reportValidity`) и отправкой этой формы. |
+| `isSubmitting`     | `boolean`                                   | Флаг активного выполнения асинхронного действия (`true` во время работы `onAction` / `registerAction`). Используется для блокировки полей формы (`disabled={isSubmitting}`).                                             |
+| `registerAction`   | `(fn: () => void \| Promise<void>) => void` | Регистрирует функцию отправки изнутри компонента формы. Имеет приоритет над внешним `onAction`.                                                                                                                          |
 
 ### 3. Контекст `ModalProvider` и хук `useModal()`
 
-| Название параметра | Тип | Описание |
-| --- | --- | --- |
-| `openModal` | `(options: OpenModalOptions) => void` | Открывает новое модальное окно с переданными параметрами (`OpenModalOptions` включает все поля `ModalProps`, кроме `isOpen` и `children`, заменяя `children` на `content` и делая `onClose` необязательным). |
-| `closeModal` | `() => void` | Программно закрывает текущее открытое через провайдер модальное окно и вызывает его `onClose`. |
+| Название параметра | Тип                                   | Описание                                                                                                                                                                                                     |
+| ------------------ | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `openModal`        | `(options: OpenModalOptions) => void` | Открывает новое модальное окно с переданными параметрами (`OpenModalOptions` включает все поля `ModalProps`, кроме `isOpen` и `children`, заменяя `children` на `content` и делая `onClose` необязательным). |
+| `closeModal`       | `() => void`                          | Программно закрывает текущее открытое через провайдер модальное окно и вызывает его `onClose`.                                                                                                               |
 
 ## Быстрый старт
 
 Оберните приложение в `ModalProvider` (например, в корневом `layout.tsx`):
 
 ```tsx
-import { ModalProvider } from "./ModalContext";
+import { ModalProvider } from "@ui-kit/components";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <ModalProvider>{children}</ModalProvider>;
 }
 ```
@@ -51,10 +55,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ```tsx
 "use client";
-import { useModal } from "./ModalContext";
-import Button from "../Button";
+import { useModal, Button } from "@ui-kit/components";
 
-export function DeleteGroupButton({ code, onDelete }: { code: string; onDelete: () => Promise<void> }) {
+export function DeleteGroupButton({
+  code,
+  onDelete,
+}: {
+  code: string;
+  onDelete: () => Promise<void>;
+}) {
   const { openModal } = useModal();
 
   return (
@@ -65,7 +74,11 @@ export function DeleteGroupButton({ code, onDelete }: { code: string; onDelete: 
           title: "Удаление группы",
           actionText: "Удалить",
           actionAppearance: "destructive",
-          content: <p>Вы действительно хотите удалить группу <strong>{code}</strong>?</p>,
+          content: (
+            <p>
+              Вы действительно хотите удалить группу <strong>{code}</strong>?
+            </p>
+          ),
           onAction: onDelete,
         })
       }
@@ -79,6 +92,7 @@ export function DeleteGroupButton({ code, onDelete }: { code: string; onDelete: 
 ## Примеры использования
 
 ### 1. Модальное окно с формой создания и редактирования (`registerAction` + `FormData`)
+
 Компонент формы принимает `ModalFormRenderProps` (`formId`, `isSubmitting`, `registerAction`), привязывает `formId` к `<form>` и регистрирует асинхронный обработчик через `registerAction`. При клике на кнопку «Сохранить» в футере или нажатии `Enter` в любом текстовом поле модальное окно сначала запустит браузерную валидацию полей (`required`, `min`, `max`, `setCustomValidity`), а затем вызовет зарегистрированный колбэк. Если он выбросит ошибку, окно не закроется и выведет текст ошибки через `errorMessage` в футере.
 
 ```tsx
@@ -124,7 +138,9 @@ export default function GroupForm({
       await submitRef.current({
         group_code: String(formData.get("group_code") ?? "").trim(),
         group_name: String(formData.get("group_name") ?? "").trim(),
-        education_program: String(formData.get("education_program") ?? "").trim(),
+        education_program: String(
+          formData.get("education_program") ?? "",
+        ).trim(),
         admission_year: Number(formData.get("admission_year")),
       });
     });
@@ -158,7 +174,11 @@ export default function GroupForm({
         label="Год набора"
         name="admission_year"
         type="number"
-        defaultValue={initial?.admission_year !== undefined ? String(initial.admission_year) : ""}
+        defaultValue={
+          initial?.admission_year !== undefined
+            ? String(initial.admission_year)
+            : ""
+        }
         required
         min={2000}
         max={2100}
@@ -171,6 +191,7 @@ export default function GroupForm({
 ```
 
 ### 2. Вызов формы и окна подтверждения из хука страницы (`openModal` + `useOptimistic`)
+
 В бизнес-логике страницы можно открывать разные модальные окна через единый `openModal`: для формы отключать закрытие по клику на фон (`closeOnBackdropClick: false`) и передавать функцию форматирования ошибок `errorMessage: getErrorMessage`, а для удаления использовать `actionAppearance: "destructive"`.
 
 ```tsx
@@ -207,7 +228,8 @@ const openAlert = (group: Group) => {
     content: (
       <p className="BodyTextBlockStyle">
         Вы действительно хотите удалить группу{" "}
-        <strong className="BodyStrongTextBlockStyle">{group.group_code}</strong>?
+        <strong className="BodyStrongTextBlockStyle">{group.group_code}</strong>
+        ?
       </p>
     ),
     onAction: async () => {
@@ -219,6 +241,7 @@ const openAlert = (group: Group) => {
 ```
 
 ### 3. Декларативное использование `<Modal>` без кнопки действия (информационное окно)
+
 Если не передавать `actionText`, `onAction` и передавать в `children` обычный JSX (не функцию), футер с кнопкой действия не рендерится, а окно работает в режиме просмотра информации.
 
 ```tsx
@@ -231,7 +254,7 @@ const [isOpen, setIsOpen] = useState(false);
   width={560}
 >
   <p>Код группы указывается в формате факультета и года поступления.</p>
-</Modal>
+</Modal>;
 ```
 
 ## Ограничения

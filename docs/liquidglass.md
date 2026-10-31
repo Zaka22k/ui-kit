@@ -1,29 +1,29 @@
 # LiquidGlass
 
-Панель, которая преломляет то, что лежит за ней, как Liquid Glass у Apple. Подходит и как подложка, и как основа для стеклянных кнопок и полей ввода.
+Панель, которая преломляет то, что лежит за ней. Подходит и как подложка, и как основа для стеклянных кнопок и полей ввода.
 
-Преломление построено на SVG-фильтре `feDisplacementMap` внутри `backdrop-filter`, блик и тень по краю это обычные слои панели. Основано на статье [kube.io](https://kube.io/blog/liquid-glass-css-svg/), блик и тень по краю построены нами самостоятельно.
+Преломление построено на SVG-фильтре `feDisplacementMap` внутри `backdrop-filter`, блик и тень по краю это обычные слои панели.
 
 - Преломление работает только в Chromium (Chrome, Edge, Opera, Android). В остальных браузерах и на iOS панель показывает обычное размытие (`fallbackBlur`), блик и тень по краю видны везде.
 - Остался один профиль кромки: плоско-выпуклая линза с фаской. Купола, мениска при нажатии, дисперсии цвета и внешней тени больше нет.
 
 ## Файлы
 
-| Файл | Что внутри |
-|---|---|
-| `LiquidGlass.tsx` | React-компонент |
-| `liquidGlassOptions.ts` | Типы параметров, значения по умолчанию (`LIQUID_GLASS_DEFAULTS`), таблица токенов (`LIQUID_GLASS_TOKENS`) |
-| `liquidGlassTokens.ts` | Чтение токенов `--lg-*` и их слежение за сменой темы |
-| `liquidGlassMath.ts` | Чистая математика: закон Снеллиуса, карта смещений, маски блика и тени |
-| `liquidGlass.tokens.css` | Справочник токенов и примеры (всё закомментировано) |
-| `index.ts` | Публичные экспорты |
+| Файл                     | Что внутри                                                                                                |
+| ------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `LiquidGlass.tsx`        | React-компонент                                                                                           |
+| `liquidGlassOptions.ts`  | Типы параметров, значения по умолчанию (`LIQUID_GLASS_DEFAULTS`), таблица токенов (`LIQUID_GLASS_TOKENS`) |
+| `liquidGlassTokens.ts`   | Чтение токенов `--lg-*` и их слежение за сменой темы                                                      |
+| `liquidGlassMath.ts`     | Чистая математика: закон Снеллиуса, карта смещений, маски блика и тени                                    |
+| `liquidGlass.tokens.css` | Справочник токенов и примеры (всё закомментировано)                                                       |
+| `index.ts`               | Публичные экспорты                                                                                        |
 
 Файл с математикой называется `liquidGlassMath.ts`, а не `liquidGlass.ts`: на Windows и macOS имена `liquidGlass.ts` и `LiquidGlass.tsx` отличаются только регистром и конфликтуют.
 
 ## Быстрый старт
 
 ```tsx
-import { LiquidGlass } from "./liquid-glass";
+import { LiquidGlass } from "@ui-kit/components";
 
 // Подложка
 <LiquidGlass width={320} height={160} radius={32}>
@@ -58,10 +58,16 @@ import { LiquidGlass } from "./liquid-glass";
 
 ```css
 :root {
-  --lg-edge-opacity: var(--edgeShadowOpacity);   /* 0.4 в светлой теме, 0 в тёмной */
+  --lg-edge-opacity: var(
+    --edgeShadowOpacity
+  ); /* 0.4 в светлой теме, 0 в тёмной */
 }
 .glass-accent {
-  --lg-tint: color-mix(in srgb, var(--AccentFillColorDefaultBrush) 70%, transparent);
+  --lg-tint: color-mix(
+    in srgb,
+    var(--AccentFillColorDefaultBrush) 70%,
+    transparent
+  );
   --lg-radius: var(--CircularCornerRadius);
 }
 ```
@@ -72,41 +78,42 @@ import { LiquidGlass } from "./liquid-glass";
 
 Типы токенов: длина (`24px`, `1.5rem`, `calc(...)`, `var(...)`), число, угол (`-110deg`, `0.25turn`), цвет (любой CSS-цвет, включая `color-mix()`), переключатель (`0` или `1`).
 
-| Токен | Пропс | Тип | По умолчанию |
-|---|---|---|---|
-| `--lg-width` | `width` | длина | 320 |
-| `--lg-height` | `height` | длина | 160 |
-| `--lg-radius` | `radius` | длина | 9999 |
-| `--lg-bezel` | `bezel` | длина | 30 |
-| `--lg-glass-height` | `glassHeight` | длина | 50 |
-| `--lg-ior` | `ior` | число 1…3 | 1.5 |
-| `--lg-strength` | `strength` | число 0…3 | 1 |
-| `--lg-blur` | `blur` | длина | 0.25 |
-| `--lg-saturation` | `saturation` | число 0…5 | 1.4 |
-| `--lg-fallback-blur` | `fallbackBlur` | длина | 24 |
-| `--lg-tint` | `tint` | цвет | `rgba(255,255,255,0)` |
-| `--lg-tint-opacity` | `tintOpacity` | число 0…1 | не задан |
-| `--lg-edge-opacity` | `edgeShadowOpacity` | число 0…1 | 0.35 |
-| `--lg-edge-width` | `edgeShadowWidth` | длина | 8 |
-| `--lg-edge-direction` | `edgeShadowDirection` | число 0…1 | 0.65 |
-| `--lg-specular-color` | `specularColor` | цвет | `#ffffff` |
-| `--lg-specular-opacity` | `specularOpacity` | число 0…1 | 0.6 |
-| `--lg-specular-width` | `specularWidth` | длина | 2 |
-| `--lg-light-angle` | `specularAngle` | угол | -110 |
-| `--lg-effects` | `interactive` | 0 / 1 | 0 |
-| `--lg-glow-hover` | `glowHover` | число 0…1 | 0.25 |
-| `--lg-glow-press` | `glowPress` | число 0…1 | 0.6 |
-| `--lg-glow-edge` | `glowEdge` | число 0…1 | 1 |
-| `--lg-glow-size` | `glowSize` | длина | 160 |
-| `--lg-glow-color` | `glowColor` | цвет | `#ffffff` |
-| `--lg-hover-scale` | `hoverScale` | число 0.5…1.5 | 1 |
-| `--lg-press-scale` | `pressScale` | число 0.5…1.5 | 1.06 |
-| `--lg-bounce` | `bounce` | число 0…1 | 0.6 |
-| `--lg-stiffness` | `stiffness` | число 20…2000 | 300 |
+| Токен                   | Пропс                 | Тип           | По умолчанию          |
+| ----------------------- | --------------------- | ------------- | --------------------- |
+| `--lg-width`            | `width`               | длина         | 320                   |
+| `--lg-height`           | `height`              | длина         | 160                   |
+| `--lg-radius`           | `radius`              | длина         | 9999                  |
+| `--lg-bezel`            | `bezel`               | длина         | 30                    |
+| `--lg-glass-height`     | `glassHeight`         | длина         | 50                    |
+| `--lg-ior`              | `ior`                 | число 1…3     | 1.5                   |
+| `--lg-strength`         | `strength`            | число 0…3     | 1                     |
+| `--lg-blur`             | `blur`                | длина         | 0.25                  |
+| `--lg-saturation`       | `saturation`          | число 0…5     | 1.4                   |
+| `--lg-fallback-blur`    | `fallbackBlur`        | длина         | 24                    |
+| `--lg-tint`             | `tint`                | цвет          | `rgba(255,255,255,0)` |
+| `--lg-tint-opacity`     | `tintOpacity`         | число 0…1     | не задан              |
+| `--lg-edge-opacity`     | `edgeShadowOpacity`   | число 0…1     | 0.35                  |
+| `--lg-edge-width`       | `edgeShadowWidth`     | длина         | 8                     |
+| `--lg-edge-direction`   | `edgeShadowDirection` | число 0…1     | 0.65                  |
+| `--lg-specular-color`   | `specularColor`       | цвет          | `#ffffff`             |
+| `--lg-specular-opacity` | `specularOpacity`     | число 0…1     | 0.6                   |
+| `--lg-specular-width`   | `specularWidth`       | длина         | 2                     |
+| `--lg-light-angle`      | `specularAngle`       | угол          | -110                  |
+| `--lg-effects`          | `interactive`         | 0 / 1         | 0                     |
+| `--lg-glow-hover`       | `glowHover`           | число 0…1     | 0.25                  |
+| `--lg-glow-press`       | `glowPress`           | число 0…1     | 0.6                   |
+| `--lg-glow-edge`        | `glowEdge`            | число 0…1     | 1                     |
+| `--lg-glow-size`        | `glowSize`            | длина         | 160                   |
+| `--lg-glow-color`       | `glowColor`           | цвет          | `#ffffff`             |
+| `--lg-hover-scale`      | `hoverScale`          | число 0.5…1.5 | 1                     |
+| `--lg-press-scale`      | `pressScale`          | число 0.5…1.5 | 1.06                  |
+| `--lg-bounce`           | `bounce`              | число 0…1     | 0.6                   |
+| `--lg-stiffness`        | `stiffness`           | число 20…2000 | 300                   |
 
 Значения токенов вне диапазона ограничиваются (пропсы не ограничиваются). Неверное по типу значение токена считается незаданным, тогда работает пропс.
 
 **Как работают токены**
+
 - При первом использовании каждый токен регистрируется через `CSS.registerProperty` с типом. Поэтому браузер сам считает `calc()`, `rem`, `var()` и `color-mix()`. Там, где API нет, понимаются только числа и `px`.
 - Токены читаются после каждого рендера компонента. Кроме того, перечитываются при смене атрибута у любого предка (`class`, `data-theme`, inline-стиль с пользовательскими свойствами) и при смене системной цветовой схемы, не чаще раза в кадр.
 - Не замечается смена токена, вызванная только правилом стилей без смены атрибутов (например, `:hover` у предка). Для такого случая перерисуйте компонент или задавайте токен через `style`.
@@ -129,17 +136,17 @@ import { LiquidGlass } from "./liquid-glass";
 
 ## Миграция с GlassPanel
 
-| Было | Стало |
-|---|---|
-| `GlassPanel`, `GlassPanelProps`, `GLASS_DEFAULTS` | `LiquidGlass`, `LiquidGlassProps`, `LIQUID_GLASS_DEFAULTS` |
-| `liquidGlass.ts` | `liquidGlassMath.ts` |
-| `profile` (`squircle`, `circle`, `concave`, `lip`) | убран, один профиль |
-| `dispersion` | убран |
-| `boxShadow`, `outerShadowOpacity` | убраны, внешней тени нет (используйте `style.boxShadow`) |
-| `specularOpacity="var(--x)"` и другие значения-токены в пропсах | задавайте токен `--lg-specular-opacity: var(--x)` в CSS |
-| `edgeShadowOpacity="var(--edgeShadowOpacity)"` | `--lg-edge-opacity: var(--edgeShadowOpacity)` на `:root` |
-| `edgeShadowWidth="var(--glass-edge-width)"` | `--lg-edge-width: var(--glass-edge-width)` |
-| `glowColor` (CSS-цвет) | без изменений |
+| Было                                                            | Стало                                                      |
+| --------------------------------------------------------------- | ---------------------------------------------------------- |
+| `GlassPanel`, `GlassPanelProps`, `GLASS_DEFAULTS`               | `LiquidGlass`, `LiquidGlassProps`, `LIQUID_GLASS_DEFAULTS` |
+| `liquidGlass.ts`                                                | `liquidGlassMath.ts`                                       |
+| `profile` (`squircle`, `circle`, `concave`, `lip`)              | убран, один профиль                                        |
+| `dispersion`                                                    | убран                                                      |
+| `boxShadow`, `outerShadowOpacity`                               | убраны, внешней тени нет (используйте `style.boxShadow`)   |
+| `specularOpacity="var(--x)"` и другие значения-токены в пропсах | задавайте токен `--lg-specular-opacity: var(--x)` в CSS    |
+| `edgeShadowOpacity="var(--edgeShadowOpacity)"`                  | `--lg-edge-opacity: var(--edgeShadowOpacity)` на `:root`   |
+| `edgeShadowWidth="var(--glass-edge-width)"`                     | `--lg-edge-width: var(--glass-edge-width)`                 |
+| `glowColor` (CSS-цвет)                                          | без изменений                                              |
 
 Пример для `SearchField`:
 

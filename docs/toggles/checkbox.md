@@ -4,24 +4,24 @@
 
 ## Параметры
 
-| Название параметра | Тип | Описание |
-| --- | --- | --- |
-| `label` | `ReactNode` | Текстовая подпись рядом с чекбоксом. Значения `undefined`, `null` и `false` не рендерятся. Если подпись не передана, укажите `aria-label`. |
-| `labelPlacement` | `"end" \| "start"` | Положение подписи: `"end"` (по умолчанию, справа от чекбокса) или `"start"` (слева от чекбокса). |
-| `indeterminate` | `boolean` | Смешанное (частично выбранное) состояние: рисует тире вместо галочки и синхронизирует нативное DOM-свойство `input.indeterminate`. По умолчанию `false`. |
-| `checked` | `boolean` | Состояние чекбокса в контролируемом режиме. |
-| `defaultChecked` | `boolean` | Начальное состояние в неконтролируемом режиме (при динамическом обновлении пропа компонент синхронизирует DOM-состояние автоматически). |
-| `onChange` | `ChangeEventHandler<HTMLInputElement>` | Обработчик переключения состояния. |
-| `disabled` | `boolean` | Отключает чекбокс. Также автоматически переходит в `disabled`, когда родительская `<form>` находится в состоянии `pending` (`useFormStatus`). |
-| `className` | `string` | Пользовательский CSS-класс. Применяется к корневому элементу `<label>`. |
-| `style` | `CSSProperties` | Инлайн-стили. Применяются к корневому элементу `<label>`. |
-| `ref` | `Ref<HTMLInputElement>` | Ссылка на нативный элемент `<input type="checkbox">`. |
-| `...rest` | `Omit<InputHTMLAttributes<HTMLInputElement>, "type" \| "role" \| "size" \| "children" \| "className" \| "style">` | Остальные нативные атрибуты `<input>` (`name`, `value`, `id`, `required`, `aria-*` и др.). |
+| Название параметра | Тип                                                                                                               | Описание                                                                                                                                                 |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`            | `ReactNode`                                                                                                       | Текстовая подпись рядом с чекбоксом. Значения `undefined`, `null` и `false` не рендерятся. Если подпись не передана, укажите `aria-label`.               |
+| `labelPlacement`   | `"end" \| "start"`                                                                                                | Положение подписи: `"end"` (по умолчанию, справа от чекбокса) или `"start"` (слева от чекбокса).                                                         |
+| `indeterminate`    | `boolean`                                                                                                         | Смешанное (частично выбранное) состояние: рисует тире вместо галочки и синхронизирует нативное DOM-свойство `input.indeterminate`. По умолчанию `false`. |
+| `checked`          | `boolean`                                                                                                         | Состояние чекбокса в контролируемом режиме.                                                                                                              |
+| `defaultChecked`   | `boolean`                                                                                                         | Начальное состояние в неконтролируемом режиме (при динамическом обновлении пропа компонент синхронизирует DOM-состояние автоматически).                  |
+| `onChange`         | `ChangeEventHandler<HTMLInputElement>`                                                                            | Обработчик переключения состояния.                                                                                                                       |
+| `disabled`         | `boolean`                                                                                                         | Отключает чекбокс. Также автоматически переходит в `disabled`, когда родительская `<form>` находится в состоянии `pending` (`useFormStatus`).            |
+| `className`        | `string`                                                                                                          | Пользовательский CSS-класс. Применяется к корневому элементу `<label>`.                                                                                  |
+| `style`            | `CSSProperties`                                                                                                   | Инлайн-стили. Применяются к корневому элементу `<label>`.                                                                                                |
+| `ref`              | `Ref<HTMLInputElement>`                                                                                           | Ссылка на нативный элемент `<input type="checkbox">`.                                                                                                    |
+| `...rest`          | `Omit<InputHTMLAttributes<HTMLInputElement>, "type" \| "role" \| "size" \| "children" \| "className" \| "style">` | Остальные нативные атрибуты `<input>` (`name`, `value`, `id`, `required`, `aria-*` и др.).                                                               |
 
 ## Быстрый старт
 
 ```tsx
-import { Checkbox } from "./Toggles";
+import { Checkbox } from "@ui-kit/components";
 
 export default function App() {
   return (
@@ -37,23 +37,29 @@ export default function App() {
 ## Примеры использования
 
 ### 1. Контролируемый и неконтролируемый режимы
+
 Компонент поддерживает оба стандартных подхода React. Если подпись не нужна, обязательно передайте `aria-label` для экранных дикторов.
 
 ```tsx
 const [agreed, setAgreed] = useState(false);
 
-{/* Контролируемый с подписью */}
+{
+  /* Контролируемый с подписью */
+}
 <Checkbox
   label="Я принимаю условия использования"
   checked={agreed}
   onChange={(e) => setAgreed(e.target.checked)}
-/>
+/>;
 
-{/* Неконтролируемый без подписи */}
-<Checkbox aria-label="Выбрать строку" defaultChecked={false} />
+{
+  /* Неконтролируемый без подписи */
+}
+<Checkbox aria-label="Выбрать строку" defaultChecked={false} />;
 ```
 
 ### 2. Смешанное состояние (`indeterminate`) для главного чекбокса
+
 Свойство `indeterminate` используется для родительского чекбокса «Выбрать все», когда выбрана только часть дочерних элементов. Компонент принудительно удерживает DOM-свойство `input.indeterminate` в соответствии с пропом даже после пользовательского клика.
 
 ```tsx
@@ -70,10 +76,11 @@ const someChecked = values.some(Boolean) && !allChecked;
     const next = e.target.checked;
     setItems({ a: next, b: next, c: next });
   }}
-/>
+/>;
 ```
 
 ### 3. Подпись слева (`labelPlacement="start"`) и работа в формах
+
 С помощью `labelPlacement="start"` и растягивания корневого `<label>` можно делать строки настроек. Внутри `<form>` чекбокс сам блокируется на время выполнения Server Action (`useFormStatus`).
 
 ```tsx

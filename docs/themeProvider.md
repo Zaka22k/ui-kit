@@ -6,41 +6,45 @@
 
 ### 1. Свойства `ThemeProvider` (`ThemeProviderProps`)
 
-| Название параметра | Тип | Описание |
-| --- | --- | --- |
-| `children` | `ReactNode` | Дочерние элементы приложения, внутри которых будет доступен хук `useTheme()`. |
-| `initialTheme` | `"light" \| "dark" \| "auto"` | Начальная тема оформления (например, прочитанная на сервере из cookie `app-theme`). По умолчанию `"light"`. |
-| `initialAccent` | `AccentColor` | Начальный акцентный цвет: один из 13 системных цветов (`SystemAccent`) или любая валидная CSS-строка цвета (прочитанная из cookie `app-accent`). По умолчанию `"green"`. |
+| Название параметра | Тип                           | Описание                                                                                                                                                                 |
+| ------------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `children`         | `ReactNode`                   | Дочерние элементы приложения, внутри которых будет доступен хук `useTheme()`.                                                                                            |
+| `initialTheme`     | `"light" \| "dark" \| "auto"` | Начальная тема оформления (например, прочитанная на сервере из cookie `app-theme`). По умолчанию `"light"`.                                                              |
+| `initialAccent`    | `AccentColor`                 | Начальный акцентный цвет: один из 13 системных цветов (`SystemAccent`) или любая валидная CSS-строка цвета (прочитанная из cookie `app-accent`). По умолчанию `"green"`. |
 
 ### 2. Значения и методы хука `useTheme()` (`ThemeContextValue`)
 
-| Название параметра | Тип | Описание |
-| --- | --- | --- |
-| `theme` | `"light" \| "dark" \| "auto"` | Текущий выбранный режим темы. |
-| `resolvedTheme` | `"light" \| "dark"` | Фактически применённая тема: если `theme === "auto"`, возвращает текущую системную тему ОС (`prefers-color-scheme`), иначе совпадает с `theme`. |
-| `accent` | `AccentColor` | Текущий акцентный цвет (имя из `SYSTEM_ACCENTS` или произвольный CSS-цвет). |
-| `setTheme` | `(theme: Theme) => void` | Устанавливает тему (`"light"`, `"dark"` или `"auto"`), обновляет `data-theme` на `<html>` и сохраняет выбор в cookie `app-theme` на 1 год. |
-| `toggleTheme` | `() => void` | Переключает тему между `"light"` и `"dark"` (если текущая тема была `"auto"`, отталкивается от фактической системной темы и переводит в противоположный явный режим). |
-| `setAccent` | `(accent: AccentColor) => void` | Меняет акцентный цвет, обновляет `data-accent` (и `--accent-base` для кастомных цветов) на `<html>` и сохраняет выбор в cookie `app-accent` на 1 год. |
+| Название параметра | Тип                             | Описание                                                                                                                                                              |
+| ------------------ | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `theme`            | `"light" \| "dark" \| "auto"`   | Текущий выбранный режим темы.                                                                                                                                         |
+| `resolvedTheme`    | `"light" \| "dark"`             | Фактически применённая тема: если `theme === "auto"`, возвращает текущую системную тему ОС (`prefers-color-scheme`), иначе совпадает с `theme`.                       |
+| `accent`           | `AccentColor`                   | Текущий акцентный цвет (имя из `SYSTEM_ACCENTS` или произвольный CSS-цвет).                                                                                           |
+| `setTheme`         | `(theme: Theme) => void`        | Устанавливает тему (`"light"`, `"dark"` или `"auto"`), обновляет `data-theme` на `<html>` и сохраняет выбор в cookie `app-theme` на 1 год.                            |
+| `toggleTheme`      | `() => void`                    | Переключает тему между `"light"` и `"dark"` (если текущая тема была `"auto"`, отталкивается от фактической системной темы и переводит в противоположный явный режим). |
+| `setAccent`        | `(accent: AccentColor) => void` | Меняет акцентный цвет, обновляет `data-accent` (и `--accent-base` для кастомных цветов) на `<html>` и сохраняет выбор в cookie `app-accent` на 1 год.                 |
 
 ### 3. Экспортируемые константы и типы
 
-| Имя | Значение / Тип | Описание |
-| --- | --- | --- |
-| `SYSTEM_ACCENTS` | `readonly ["red", "orange", "yellow", "green", "mint", "teal", "cyan", "blue", "indigo", "purple", "pink", "brown", "gray"]` | Массив всех встроенных системных акцентов, адаптированных под светлую и тёмную тему в `theme.css`. |
-| `Theme` | `"light" \| "dark" \| "auto"` | Тип режима цветовой схемы. |
-| `ResolvedTheme` | `"light" \| "dark"` | Тип вычисленной темы без `"auto"`. |
-| `SystemAccent` | `(typeof SYSTEM_ACCENTS)[number]` | Объединение строковых литералов 13 системных акцентов. |
-| `AccentColor` | `SystemAccent \| (string & {})` | Тип акцента с автодополнением системных цветов и поддержкой любого кастомного CSS-цвета (`#hex`, `rgb()`, `oklch()`). |
+| Имя              | Значение / Тип                                                                                                               | Описание                                                                                                              |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `SYSTEM_ACCENTS` | `readonly ["red", "orange", "yellow", "green", "mint", "teal", "cyan", "blue", "indigo", "purple", "pink", "brown", "gray"]` | Массив всех встроенных системных акцентов, адаптированных под светлую и тёмную тему в `theme.css`.                    |
+| `Theme`          | `"light" \| "dark" \| "auto"`                                                                                                | Тип режима цветовой схемы.                                                                                            |
+| `ResolvedTheme`  | `"light" \| "dark"`                                                                                                          | Тип вычисленной темы без `"auto"`.                                                                                    |
+| `SystemAccent`   | `(typeof SYSTEM_ACCENTS)[number]`                                                                                            | Объединение строковых литералов 13 системных акцентов.                                                                |
+| `AccentColor`    | `SystemAccent \| (string & {})`                                                                                              | Тип акцента с автодополнением системных цветов и поддержкой любого кастомного CSS-цвета (`#hex`, `rgb()`, `oklch()`). |
 
 ## Быстрый старт
 
 Оберните корневой макет в `ThemeProvider` (сам файл уже импортирует глобальные `theme.css` и `tokens.css`):
 
 ```tsx
-import { ThemeProvider } from "./ThemeProvider";
+import { ThemeProvider } from "@ui-kit/components";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="ru" data-theme="light" data-accent="green">
       <body>
@@ -57,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ```tsx
 "use client";
-import { useTheme } from "./ThemeProvider";
+import { useTheme } from "@ui-kit/components";
 
 export function QuickThemeToggle() {
   const { resolvedTheme, toggleTheme } = useTheme();
@@ -73,6 +77,7 @@ export function QuickThemeToggle() {
 ## Примеры использования
 
 ### 1. Бесшовная работа с SSR без мигания темы (Next.js App Router)
+
 Поскольку `ThemeProvider` при каждом изменении записывает `app-theme` и `app-accent` в `document.cookie` (`max-age=31536000; path=/; SameSite=Lax`), серверный `layout.tsx` может прочитать их через `cookies()` и сразу отрендерить `<html data-theme="..." data-accent="...">` до гидратации React.
 
 ```tsx
@@ -83,7 +88,7 @@ import {
   SYSTEM_ACCENTS,
   type Theme,
   type AccentColor,
-} from "@/components/ThemeProvider";
+} from "@ui-kit/components";
 
 export default async function RootLayout({
   children,
@@ -97,8 +102,7 @@ export default async function RootLayout({
       ? rawTheme
       : "light";
 
-  const accent: AccentColor =
-    cookieStore.get("app-accent")?.value ?? "green";
+  const accent: AccentColor = cookieStore.get("app-accent")?.value ?? "green";
 
   const isSystem = (SYSTEM_ACCENTS as readonly string[]).includes(accent);
 
@@ -124,17 +128,25 @@ export default async function RootLayout({
 ```
 
 ### 2. Панель выбора системного или кастомного акцентного цвета
+
 Если передать в `setAccent` цвет из `SYSTEM_ACCENTS`, на `<html>` установится `data-accent="<цвет>"`, который активирует парные светлые и тёмные токены (а для `"yellow"` автоматически заменит `--text-selected` на тёмный текст для читаемости). Если передать произвольный HEX/RGB-цвет, компонент выставит `data-accent="custom"` и запишет значение напрямую в инлайн-переменную `--accent-base`.
 
 ```tsx
 "use client";
-import { useTheme, SYSTEM_ACCENTS } from "./ThemeProvider";
+import { useTheme, SYSTEM_ACCENTS } from "@ui-kit/components";
 
 export function AccentPicker() {
   const { accent, setAccent } = useTheme();
 
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: 8,
+        flexWrap: "wrap",
+        alignItems: "center",
+      }}
+    >
       {SYSTEM_ACCENTS.map((item) => (
         <button
           key={item}
@@ -144,7 +156,10 @@ export function AccentPicker() {
           style={{
             padding: "4px 10px",
             borderRadius: 6,
-            border: accent === item ? "2px solid var(--control-accent)" : "1px solid var(--separator)",
+            border:
+              accent === item
+                ? "2px solid var(--control-accent)"
+                : "1px solid var(--separator)",
           }}
         >
           {item}
@@ -164,11 +179,12 @@ export function AccentPicker() {
 ```
 
 ### 3. Переключатель трёх режимов (`light`, `dark`, `auto`)
+
 В режиме `"auto"` CSS-свойство `color-scheme: light dark` и медиазапрос `(prefers-color-scheme: light)` автоматически переключают все CSS-переменные, построенные на функции `light-dark()`, а `resolvedTheme` в React реактивно обновляется при смене системной темы ОС.
 
 ```tsx
 "use client";
-import { useTheme, type Theme } from "./ThemeProvider";
+import { useTheme, type Theme } from "@ui-kit/components";
 
 const MODES: { value: Theme; label: string }[] = [
   { value: "light", label: "Светлая" },
@@ -195,7 +211,8 @@ export function ThemeModeSelector() {
       </div>
       {theme === "auto" && (
         <p className="CaptionTextBlockStyle">
-          Сейчас активна {resolvedTheme === "dark" ? "тёмная" : "светлая"} системная схема
+          Сейчас активна {resolvedTheme === "dark" ? "тёмная" : "светлая"}{" "}
+          системная схема
         </p>
       )}
     </div>

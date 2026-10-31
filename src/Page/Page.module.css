@@ -1,13 +1,6 @@
 .page {
-  /* Высота хедера задана константой: по ней липнет шапка DataGrid и считается баннер */
   --page-header-height: 68px;
-  /* Общий боковой отступ страницы: по нему DataGrid и баннеры выходят до края окна */
   --page-padding: 24px;
-  /*
-   * Общая подложка заголовков (хедер страницы и шапка DataGrid): один тон, один блюр.
-   * Пока шапка таблицы прилипла под хедером, подложку рисует только хедер, растянутый
-   * вниз на --page-stuck-extra (его выставляет DataGrid), поэтому на стыке нет шва.
-   */
   --sticky-header-bg: var(--material-header-bg);
   --sticky-header-filter: var(--material-blur);
   --page-stuck-extra: 0px;
@@ -28,10 +21,6 @@
   padding: 0 var(--page-padding);
 }
 
-/*
- * Подложка: фон и блюр. Простирается влево под боковую панель (шапка таблицы тоже
- * выходит туда) и вниз на высоту прилипшей шапки таблицы.
- */
 .pageHeader::before {
   content: "";
   position: absolute;
@@ -48,21 +37,38 @@
   transition: opacity 0.2s ease;
 }
 
-/* Пока под тулбаром баннер, подложка не нужна: он должен быть виден чётко */
 .pageHeaderOverHero::before {
   opacity: 0;
 }
 
-/* Баннер лежит под хедером: хедер занимает место в потоке, баннер заходит под него */
 .hero {
+  position: relative;
   margin-top: calc(var(--page-header-height) * -1);
+
+  margin-left: calc(
+    (var(--page-padding, 0px) + var(--nav-safe-left, 0px)) * -1
+  );
+  margin-right: calc(var(--page-padding, 0px) * -1);
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 55%,
+    var(--window-bg) 100%
+  );
 }
 
 .pageBody {
   padding: 8px var(--page-padding) 12px;
 }
 
-/* Баннер уже занял место под тулбаром, поэтому тело начинается сразу после него */
 .pageBodyAfterHero {
   padding-top: 24px;
 }

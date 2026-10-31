@@ -1,48 +1,48 @@
 # Toolbar
 
-Система компонентов панели инструментов в стиле Apple Liquid Glass (`Toolbar`, `ToolbarGroup`, `ToolbarButton`, `ToolbarDivider`, `ToolbarSpacer`) для компоновки заголовка и групп действий внутри шапки страницы `Page`.
+Система компонентов панели инструментов (`Toolbar`, `ToolbarGroup`, `ToolbarButton`, `ToolbarDivider`, `ToolbarSpacer`) для компоновки заголовка и групп действий внутри шапки страницы `Page`.
 
 ## Параметры
 
 ### 1. Свойства `Toolbar` (`ToolbarProps`)
 
-| Название параметра | Тип | Описание |
-| --- | --- | --- |
-| `leading` | `ReactNode` | Левая зона перед заголовком страницы (например, кнопка «Назад» или боковые действия). |
-| `title` | `ReactNode` | Заголовок панели инструментов (рендерится внутри левой зоны сразу после `leading`). |
-| `center` | `ReactNode` | Центральная зона для основных групп частых действий. Центрируется в доступном пространстве. |
-| `trailing` | `ReactNode` | Правая зона для поиска, второстепенных кнопок и главного действия страницы (всегда прижата к правому краю). |
-| `className` | `string` | Пользовательский CSS-класс для корневого элемента `<header role="toolbar">`. |
-| `...rest` | `Omit<HTMLAttributes<HTMLElement>, "title" \| "children">` | Остальные нативные атрибуты `<header>` (`style`, `id`, `aria-label`, `data-*` и др.). |
+| Название параметра | Тип                                                        | Описание                                                                                                    |
+| ------------------ | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `leading`          | `ReactNode`                                                | Левая зона перед заголовком страницы (например, кнопка «Назад» или боковые действия).                       |
+| `title`            | `ReactNode`                                                | Заголовок панели инструментов (рендерится внутри левой зоны сразу после `leading`).                         |
+| `center`           | `ReactNode`                                                | Центральная зона для основных групп частых действий. Центрируется в доступном пространстве.                 |
+| `trailing`         | `ReactNode`                                                | Правая зона для поиска, второстепенных кнопок и главного действия страницы (всегда прижата к правому краю). |
+| `className`        | `string`                                                   | Пользовательский CSS-класс для корневого элемента `<header role="toolbar">`.                                |
+| `...rest`          | `Omit<HTMLAttributes<HTMLElement>, "title" \| "children">` | Остальные нативные атрибуты `<header>` (`style`, `id`, `aria-label`, `data-*` и др.).                       |
 
 ### 2. Свойства `ToolbarGroup` (`ToolbarGroupProps`)
 
-| Название параметра | Тип | Описание |
-| --- | --- | --- |
-| `children` | `ReactNode` | Дочерние элементы группы (`ToolbarButton`, `ToolbarDivider`, `MenuButton` с `appearance="plain"`). |
-| `height` | `number` | Высота стеклянной капсулы в пикселях. По умолчанию `36` (`TOOLBAR_GROUP_HEIGHT`). |
-| `width` | `number \| string` | Ширина стеклянной капсулы. По умолчанию `"auto"`. |
-| `className` | `string` | Пользовательский CSS-класс для обёртки `LiquidGlass` (`role="group"`). |
-| `style` | `CSSProperties` | Инлайн-стили для `LiquidGlass` (накладываются поверх базового тона `backgroundColor: "var(--toolbar-tint)"`). |
-| `...rest` | `Omit<HTMLAttributes<HTMLDivElement>, "children">` | Остальные атрибуты `<div>`, пробрасываемые на `LiquidGlass`. |
+| Название параметра | Тип                                                | Описание                                                                                                      |
+| ------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `children`         | `ReactNode`                                        | Дочерние элементы группы (`ToolbarButton`, `ToolbarDivider`, `MenuButton` с `appearance="plain"`).            |
+| `height`           | `number`                                           | Высота стеклянной капсулы в пикселях. По умолчанию `36` (`TOOLBAR_GROUP_HEIGHT`).                             |
+| `width`            | `number \| string`                                 | Ширина стеклянной капсулы. По умолчанию `"auto"`.                                                             |
+| `className`        | `string`                                           | Пользовательский CSS-класс для обёртки `LiquidGlass` (`role="group"`).                                        |
+| `style`            | `CSSProperties`                                    | Инлайн-стили для `LiquidGlass` (накладываются поверх базового тона `backgroundColor: "var(--toolbar-tint)"`). |
+| `...rest`          | `Omit<HTMLAttributes<HTMLDivElement>, "children">` | Остальные атрибуты `<div>`, пробрасываемые на `LiquidGlass`.                                                  |
 
 ### 3. Свойства `ToolbarButton` (`ToolbarButtonProps`)
 
-| Название параметра | Тип | Описание |
-| --- | --- | --- |
-| `icon` | `ReactNode` | Иконка кнопки (отображается перед `children`). Если кнопка содержит только иконку без текста, обязательно передайте `aria-label`. |
-| `children` | `ReactNode` | Текстовая подпись кнопки. |
-| `type` | `"button" \| "submit" \| "reset"` | Нативный тип кнопки. По умолчанию `"button"`. |
-| `className` | `string` | Пользовательский CSS-класс для элемента `<button>`. |
-| `ref` | `Ref<HTMLButtonElement>` | Ссылка на нативный элемент `<button>`. |
-| `...rest` | `ButtonHTMLAttributes<HTMLButtonElement>` | Остальные атрибуты `<button>` (`onClick`, `disabled`, `form`, `formAction`, `aria-*` и др.). |
+| Название параметра | Тип                                       | Описание                                                                                                                          |
+| ------------------ | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `icon`             | `ReactNode`                               | Иконка кнопки (отображается перед `children`). Если кнопка содержит только иконку без текста, обязательно передайте `aria-label`. |
+| `children`         | `ReactNode`                               | Текстовая подпись кнопки.                                                                                                         |
+| `type`             | `"button" \| "submit" \| "reset"`         | Нативный тип кнопки. По умолчанию `"button"`.                                                                                     |
+| `className`        | `string`                                  | Пользовательский CSS-класс для элемента `<button>`.                                                                               |
+| `ref`              | `Ref<HTMLButtonElement>`                  | Ссылка на нативный элемент `<button>`.                                                                                            |
+| `...rest`          | `ButtonHTMLAttributes<HTMLButtonElement>` | Остальные атрибуты `<button>` (`onClick`, `disabled`, `form`, `formAction`, `aria-*` и др.).                                      |
 
 ### 4. Свойства `ToolbarSpacer` (`ToolbarSpacerProps`) и `ToolbarDivider`
 
-| Компонент / Параметр | Тип | Описание |
-| --- | --- | --- |
+| Компонент / Параметр         | Тип       | Описание                                                                                                                                                                                  |
+| ---------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ToolbarSpacer` (`flexible`) | `boolean` | Пробел между элементами тулбара (`aria-hidden="true"`). При `false` (по умолчанию) создаёт фиксированный отступ `8px`, при `true` — растягивается на всё свободное место (`flex: 1 1 0`). |
-| `ToolbarDivider` | — | Вертикальный разделитель `1×16px` (`role="separator"`, `aria-orientation="vertical"`) для разделения кнопок внутри `ToolbarGroup`. Не принимает параметров. |
+| `ToolbarDivider`             | —         | Вертикальный разделитель `1×16px` (`role="separator"`, `aria-orientation="vertical"`) для разделения кнопок внутри `ToolbarGroup`. Не принимает параметров.                               |
 
 ## Быстрый старт
 
@@ -52,8 +52,8 @@ import {
   ToolbarGroup,
   ToolbarButton,
   ToolbarDivider,
-} from "./Toolbar";
-import Button from "../Button";
+  Button,
+} from "@ui-kit/components";
 
 export default function AppHeader() {
   return (
@@ -75,7 +75,8 @@ export default function AppHeader() {
 ## Примеры использования
 
 ### 1. Использование внутри компонента `Page` и правило «против стекла в стекле»
-Одиночные кнопки (`Button`) и поле поиска (`SearchField`) уже имеют собственную подложку `LiquidGlass`, поэтому они размещаются в зонах тулбара напрямую. В `ToolbarGroup` оборачиваются только две и более связанные кнопки `ToolbarButton` (или `MenuButton` с `appearance="plain"`), у которых нет собственного стекла.
+
+Одиночные кнопки (`Button`) и поле поиска (`SearchField`) уже имеют собственную подложку, поэтому они размещаются в зонах тулбара напрямую. В `ToolbarGroup` оборачиваются только две и более связанные кнопки `ToolbarButton` (или `MenuButton` с `appearance="plain"`), у которых нет собственного стекла.
 
 ```tsx
 <Page
@@ -105,6 +106,7 @@ export default function AppHeader() {
 ```
 
 ### 2. Привязка кнопок тулбара к форме на странице (`form` и `formAction`)
+
 Когда шапка рендерится отдельно от `<form>` (например, через портал в `Page`), используйте атрибут `form={formId}` и `type="submit"` / `type="reset"`, чтобы управлять формой из тулбара.
 
 ```tsx
@@ -140,10 +142,11 @@ const formId = "article-edit-form";
       </Button>
     </>
   }
-/>
+/>;
 ```
 
 ### 3. Разделение групп с помощью `ToolbarSpacer`
+
 Используйте `ToolbarSpacer` для добавления фиксированного (`8px`) или гибкого (`flexible`) расстояния между группами элементов внутри одной зоны.
 
 ```tsx
