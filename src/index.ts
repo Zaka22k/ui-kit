@@ -1,4 +1,3 @@
-export * from "./LiquidGlass";
 export * from "./NavigationView";
 export { default as Button } from "./Button";
 export * from "./Page";
@@ -12,3 +11,4 @@ export * from "./Toast";
 export * from "./Theme";
 export * from "./MenuButton";
 export * from "./List";
+export { FrostedGlass } from "./FrostedGlass";

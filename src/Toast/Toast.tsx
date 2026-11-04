@@ -11,7 +11,7 @@ import {
 } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { LiquidGlass } from "../LiquidGlass";
+import { FrostedGlass } from "../FrostedGlass";
 import styles from "./Toast.module.css";
 
 /**
@@ -381,7 +381,7 @@ function ToastItem({ toast, defaultDuration, onDismiss }: ToastItemProps) {
   }, [leaving, start, stop]);
 
   return (
-    <LiquidGlass
+    <FrostedGlass
       className={leaving ? `${styles.toast} ${styles.leaving}` : styles.toast}
       role={variant === "error" ? "alert" : "status"}
       width="min(380px, calc(100vw - 32px))"
@@ -403,17 +403,9 @@ function ToastItem({ toast, defaultDuration, onDismiss }: ToastItemProps) {
         )}
 
         <div className={styles.content}>
-          {title != null && (
-            <div
-              className={styles.title}
-            >
-              {title}
-            </div>
-          )}
+          {title != null && <div className={styles.title}>{title}</div>}
           {description != null && (
-            <div className={styles.description}>
-              {description}
-            </div>
+            <div className={styles.description}>{description}</div>
           )}
           {action && (
             <button
@@ -440,7 +432,7 @@ function ToastItem({ toast, defaultDuration, onDismiss }: ToastItemProps) {
           </button>
         )}
       </div>
-    </LiquidGlass>
+    </FrostedGlass>
   );
 }
 

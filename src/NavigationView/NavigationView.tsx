@@ -20,7 +20,7 @@ import type {
   ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { LiquidGlass } from "../LiquidGlass";
+import { FrostedGlass } from "../FrostedGlass";
 import Button from "../Button";
 import {
   PageFrameContext,
@@ -911,7 +911,7 @@ export function NavCategory({
       {flyoutOpen &&
         rootRef.current &&
         createPortal(
-          <LiquidGlass
+          <FrostedGlass
             ref={flyoutRef}
             width="auto"
             height="auto"
@@ -924,15 +924,14 @@ export function NavCategory({
             onClick={handleFlyoutClick}
           >
             {children}
-          </LiquidGlass>,
+          </FrostedGlass>,
           rootRef.current,
         )}
     </div>
   );
 }
 
-export interface NavBackgroundExtensionProps
-  extends HTMLAttributes<HTMLDivElement> {
+export interface NavBackgroundExtensionProps extends HTMLAttributes<HTMLDivElement> {
   /** Выключить эффект, не убирая обёртку (аналог isEnabled в SwiftUI) */
   isEnabled?: boolean;
   /** Радиус размытия копии, px */

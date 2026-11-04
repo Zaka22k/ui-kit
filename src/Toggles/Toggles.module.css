@@ -245,7 +245,7 @@
 
 /* Цвет (--thumb-fill) читает style из Toggles.tsx: его рисует само стекло. */
 .thumb {
-  --lg-edge-opacity: 0;
+  --fg-edge-opacity: 0;
 
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   transition: background-color var(--toggle-duration) var(--toggle-easing);

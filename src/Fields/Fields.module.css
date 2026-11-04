@@ -155,7 +155,7 @@
   --search-duration: 200ms;
   --search-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
 
-  --lg-press-scale: 1.02;
+  --fg-press-scale: 1.02;
 
   --search-tint: var(--fill-tertiary);
 

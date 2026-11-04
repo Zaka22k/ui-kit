@@ -7,7 +7,7 @@ import type {
   HTMLAttributes,
   ReactNode,
 } from "react";
-import { LiquidGlass } from "../LiquidGlass";
+import { FrostedGlass } from "../FrostedGlass";
 import styles from "./Toolbar.module.css";
 
 const GROUP_TINT: CSSProperties = { backgroundColor: "var(--toolbar-tint)" };
@@ -70,7 +70,7 @@ export const ToolbarGroup = ({
   style,
   ...rest
 }: ToolbarGroupProps) => (
-  <LiquidGlass
+  <FrostedGlass
     role="group"
     interactive
     width={width}
@@ -80,7 +80,7 @@ export const ToolbarGroup = ({
     {...rest}
   >
     {children}
-  </LiquidGlass>
+  </FrostedGlass>
 );
 
 export interface ToolbarSpacerProps {

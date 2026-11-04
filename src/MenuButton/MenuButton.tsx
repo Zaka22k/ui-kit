@@ -17,7 +17,7 @@ import type {
   Ref,
 } from "react";
 import { createPortal } from "react-dom";
-import { LiquidGlass } from "../LiquidGlass";
+import { FrostedGlass } from "../FrostedGlass";
 import styles from "./MenuButton.module.css";
 
 /**
@@ -42,11 +42,10 @@ export interface MenuSeparator {
 
 export type MenuEntry = MenuItem | MenuSeparator;
 
-export interface MenuButtonProps
-  extends Omit<
-    ButtonHTMLAttributes<HTMLButtonElement>,
-    "type" | "children" | "className" | "style" | "onClick"
-  > {
+export interface MenuButtonProps extends Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "type" | "children" | "className" | "style" | "onClick"
+> {
   /** Rows of the menu. / Строки меню. */
   items: readonly MenuEntry[];
   /**
@@ -248,7 +247,10 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
       const c = clamp(p, 0, 1);
       f.style.setProperty("--menu-radius", `${from.r + (to.r - from.r) * c}px`);
       f.style.setProperty("--menu-p", String(c));
-      f.style.setProperty("--menu-content", String(clamp((p - 0.3) / 0.45, 0, 1)));
+      f.style.setProperty(
+        "--menu-content",
+        String(clamp((p - 0.3) / 0.45, 0, 1)),
+      );
       f.style.setProperty("--menu-icon", String(1 - clamp(p / 0.25, 0, 1)));
     }, []);
 
@@ -335,7 +337,11 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
         // vertical: grows down from the top of the button, or up from its bottom
         // по вертикали: растёт вниз от верха кнопки или вверх от её низа
         const up = a.top + H > vh - M && a.bottom - H >= M;
-        const top = clamp(up ? a.bottom - H : a.top, M, Math.max(M, vh - M - H));
+        const top = clamp(
+          up ? a.bottom - H : a.top,
+          M,
+          Math.max(M, vh - M - H),
+        );
 
         const from: Rect = {
           l: a.left,
@@ -365,7 +371,9 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
         apply(s.x);
         runSpring(1);
         (viaKeyboard.current
-          ? menu.querySelector<HTMLElement>('[role="menuitem"]:not([aria-disabled="true"])')
+          ? menu.querySelector<HTMLElement>(
+              '[role="menuitem"]:not([aria-disabled="true"])',
+            )
           : menu
         )?.focus({ preventScroll: true });
         viaKeyboard.current = false;
@@ -506,7 +514,7 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
             {glyph}
           </button>
         ) : (
-          <LiquidGlass
+          <FrostedGlass
             ref={anchorRef as Ref<HTMLDivElement>}
             interactive={!disabled}
             width={size}
@@ -518,7 +526,7 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
             <button {...triggerProps} className={styles.button}>
               {glyph}
             </button>
-          </LiquidGlass>
+          </FrostedGlass>
         )}
 
         {client &&
@@ -529,7 +537,7 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
               className={styles.frame}
               data-appearance={appearance}
             >
-              <LiquidGlass
+              <FrostedGlass
                 className={cx(styles.glass, menuClassName)}
                 width="100%"
                 height="100%"

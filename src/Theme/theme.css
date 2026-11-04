@@ -195,8 +195,6 @@
   --system-purple-rgb: 191, 90, 242;
   --system-pink-rgb: 255, 55, 95;
   --system-brown-rgb: 172, 142, 104;
-
-  --glass-edge-opacity: 0;
 }
 
 [data-theme="light"] {
@@ -212,8 +210,6 @@
   --system-purple-rgb: 175, 82, 222;
   --system-pink-rgb: 255, 45, 85;
   --system-brown-rgb: 162, 132, 94;
-
-  --glass-edge-opacity: 0.4;
 }
 
 @media (prefers-color-scheme: light) {
@@ -230,7 +226,5 @@
     --system-purple-rgb: 175, 82, 222;
     --system-pink-rgb: 255, 45, 85;
     --system-brown-rgb: 162, 132, 94;
-
-    --glass-edge-opacity: 0.4;
   }
 }

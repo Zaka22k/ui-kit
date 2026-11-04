@@ -113,7 +113,7 @@
 }
 
 .glass {
-  --lg-blur: 2px;
+  --fg-blur: 2px;
 
   overflow: hidden;
 }

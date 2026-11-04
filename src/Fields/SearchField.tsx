@@ -7,7 +7,7 @@ import type {
   InputHTMLAttributes,
   MouseEvent,
 } from "react";
-import { LiquidGlass } from "../LiquidGlass";
+import { FrostedGlass } from "../FrostedGlass";
 import styles from "./Fields.module.css";
 
 export type SearchFieldProps = Omit<
@@ -179,7 +179,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
     };
 
     return (
-      <LiquidGlass
+      <FrostedGlass
         interactive={!disabled}
         className={cx(styles.searchPanel, className)}
         style={{ ...SEARCH_TINT, ...style }}
@@ -215,7 +215,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
             </button>
           )}
         </label>
-      </LiquidGlass>
+      </FrostedGlass>
     );
   },
 );

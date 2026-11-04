@@ -8,7 +8,7 @@ import type {
   ReactNode,
 } from "react";
 import { useFormStatus } from "react-dom";
-import { LiquidGlass } from "../LiquidGlass";
+import { FrostedGlass } from "../FrostedGlass";
 import { type ToggleBaseProps } from "./ToggleBaseProps";
 import styles from "./Toggles.module.css";
 
@@ -177,14 +177,11 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
             if (e.propertyName === "transform") setSliding(false);
           }}
         >
-          <LiquidGlass
+          <FrostedGlass
             className={styles.thumb}
             width={g.thumbWidth}
             height={g.thumbHeight}
-            bezel={g.bezel}
-            glassHeight={g.glassHeight}
             specularWidth={g.specularWidth}
-            fallbackBlur={8}
             style={THUMB_STYLE}
           />
         </span>

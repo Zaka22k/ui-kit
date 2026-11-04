@@ -1,5 +1,5 @@
 .page {
-  --page-header-height: 68px;
+  --page-header-height: 58px;
   --page-padding: 24px;
   --sticky-header-bg: var(--material-header-bg);
   --sticky-header-filter: var(--material-blur);

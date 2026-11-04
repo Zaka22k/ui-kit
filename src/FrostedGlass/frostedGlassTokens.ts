@@ -1,16 +1,14 @@
-"use client";
-
 /**
- * Reading of the `--lg-*` CSS tokens: registration with types, reading from the computed style,
+ * Reading of the `--fg-*` CSS tokens: registration with types, reading from the computed style,
  * and a hook that keeps the values up to date when the theme or the styles change.
  *
- * Чтение CSS-токенов `--lg-*`: регистрация с типами, чтение из вычисленного стиля
+ * Чтение CSS-токенов `--fg-*`: регистрация с типами, чтение из вычисленного стиля
  * и хук, который держит значения актуальными при смене темы или стилей.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
-import { LIQUID_GLASS_TOKENS } from "./liquidGlassOptions";
-import type { TokenDef, TokenValues } from "./liquidGlassOptions";
+import { FROSTED_GLASS_TOKENS } from "./frostedGlassOptions";
+import type { TokenDef, TokenValues } from "./frostedGlassOptions";
 
 export const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
@@ -34,14 +32,14 @@ let registered: boolean | null = null;
  * считает calc(), var(), rem и color-mix(), а значение неверного типа считается «не задан».
  * Вызывается один раз, автоматически. Там, где API нет, обычные числа и px всё равно понимаются.
  */
-export function registerLiquidGlassTokens(): boolean {
+export function registerFrostedGlassTokens(): boolean {
   if (registered !== null) return registered;
   if (typeof window === "undefined") return false;
   if (!(window.CSS && typeof CSS.registerProperty === "function")) {
     registered = false;
     return false;
   }
-  for (const def of LIQUID_GLASS_TOKENS) {
+  for (const def of FROSTED_GLASS_TOKENS) {
     try {
       CSS.registerProperty({
         name: def.token,
@@ -66,10 +64,7 @@ const clamp = (v: number, def: TokenDef): number =>
  * Превращает вычисленное значение одного токена в значение JS. Возвращает undefined, если токен не задан
  * или не читается.
  */
-function parseToken(
-  def: TokenDef,
-  raw: string,
-): number | boolean | string | undefined {
+function parseToken(def: TokenDef, raw: string): number | boolean | string | undefined {
   if (raw === "" || raw === "none") return undefined;
   switch (def.kind) {
     case "color":
@@ -77,22 +72,13 @@ function parseToken(
     case "bool":
       if (/^(false|off)$/i.test(raw)) return false;
       if (/^(true|on)$/i.test(raw)) return true;
-      return Number.isFinite(parseFloat(raw))
-        ? parseFloat(raw) !== 0
-        : undefined;
+      return Number.isFinite(parseFloat(raw)) ? parseFloat(raw) !== 0 : undefined;
     case "angle": {
       const m = /^(-?[\d.]+(?:e-?\d+)?)(deg|rad|turn|grad)?$/i.exec(raw);
       if (!m) return undefined;
       const n = parseFloat(m[1]);
       const unit = (m[2] ?? "deg").toLowerCase();
-      const deg =
-        unit === "rad"
-          ? (n * 180) / Math.PI
-          : unit === "turn"
-            ? n * 360
-            : unit === "grad"
-              ? n * 0.9
-              : n;
+      const deg = unit === "rad" ? (n * 180) / Math.PI : unit === "turn" ? n * 360 : unit === "grad" ? n * 0.9 : n;
       return clamp(deg, def);
     }
     case "length": {
@@ -115,10 +101,10 @@ function parseToken(
  * Читает все токены элемента. В результате только заданные токены.
  */
 export function readTokenValues(el: HTMLElement): TokenValues {
-  registerLiquidGlassTokens();
+  registerFrostedGlassTokens();
   const cs = getComputedStyle(el);
   const out: Record<string, unknown> = {};
-  for (const def of LIQUID_GLASS_TOKENS) {
+  for (const def of FROSTED_GLASS_TOKENS) {
     const value = parseToken(def, cs.getPropertyValue(def.token).trim());
     if (value !== undefined) out[def.key] = value;
   }
@@ -140,9 +126,7 @@ const EMPTY: TokenValues = {};
  * в одно за кадр. Изменения, вызванные только правилом таблицы стилей без смены атрибутов
  * (например, :hover у предка), не замечаются.
  */
-export function useLiquidGlassTokens(
-  ref: RefObject<HTMLElement | null>,
-): TokenValues {
+export function useFrostedGlassTokens(ref: RefObject<HTMLElement | null>): TokenValues {
   const [tokens, setTokens] = useState<TokenValues>(EMPTY);
   const last = useRef("{}");
 
@@ -183,8 +167,7 @@ export function useLiquidGlassTokens(
         // анимация style у предка не стоила чтения на каждый кадр.
         if (r.attributeName === "style") {
           const now = (r.target as Element).getAttribute("style") ?? "";
-          if (!now.includes("--") && !(r.oldValue ?? "").includes("--"))
-            continue;
+          if (!now.includes("--") && !(r.oldValue ?? "").includes("--")) continue;
         }
         schedule();
         return;
@@ -193,10 +176,7 @@ export function useLiquidGlassTokens(
     for (let n = el.parentElement; n; n = n.parentElement) {
       observer.observe(n, { attributes: true, attributeOldValue: true });
     }
-    const mq =
-      typeof matchMedia === "function"
-        ? matchMedia("(prefers-color-scheme: dark)")
-        : null;
+    const mq = typeof matchMedia === "function" ? matchMedia("(prefers-color-scheme: dark)") : null;
     mq?.addEventListener("change", schedule);
 
     return () => {

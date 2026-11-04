@@ -454,9 +454,9 @@
     transparent
   );
 
-  --lg-blur: 2px;
+  --fg-blur: 2px;
 
-  --lg-radius: calc(var(--ControlCornerRadius) * 5);
+  --fg-radius: calc(var(--ControlCornerRadius) * 5);
 
   z-index: var(--ZIndexPopup);
   min-width: 200px;

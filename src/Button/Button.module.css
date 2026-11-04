@@ -30,9 +30,9 @@
 
   &.primary {
     --button-tint: color-mix(in srgb, var(--control-accent) 60%, transparent);
-    --lg-specular-color: color-mix(in srgb, var(--control-accent) 30%, white);
-    --lg-specular-opacity: 0.85;
-    --lg-glow-color: var(--text-selected);
+    --fg-specular-color: color-mix(in srgb, var(--control-accent) 30%, white);
+    --fg-specular-opacity: 0.85;
+    --fg-glow-color: var(--text-selected);
 
     &:has(.root:hover:not(:disabled)) {
       --button-tint: color-mix(

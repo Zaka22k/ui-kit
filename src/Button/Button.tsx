@@ -3,7 +3,7 @@
 import { forwardRef } from "react";
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { LiquidGlass } from "../LiquidGlass";
+import { FrostedGlass } from "../FrostedGlass";
 import styles from "./Button.module.css";
 
 export type ButtonAppearance = "normal" | "primary" | "destructive";
@@ -55,7 +55,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   const isIconOnly = icon != null;
 
   return (
-    <LiquidGlass
+    <FrostedGlass
       interactive={!isDisabled}
       className={cx(styles.panel, buttonStyles[appearance], className)}
       style={{ ...TINT, ...style }}
@@ -75,7 +75,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       >
         {isIconOnly ? <span className={styles.icon}>{icon}</span> : children}
       </button>
-    </LiquidGlass>
+    </FrostedGlass>
   );
 });
 
