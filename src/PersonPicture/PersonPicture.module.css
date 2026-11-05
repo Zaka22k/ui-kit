@@ -1,0 +1,167 @@
+.personPicture {
+  --pp-size: 48px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ControlLabelInlineGap);
+  border-radius: var(--CircularCornerRadius);
+  user-select: none;
+  box-sizing: border-box;
+  outline: none;
+  max-width: 100%;
+  transition:
+    background-color var(--ControlAnimationDuration)
+      var(--ControlAnimationEasing),
+    transform var(--ControlAnimationDuration) var(--ControlAnimationEasing),
+    box-shadow var(--ControlAnimationDuration) var(--ControlAnimationEasing),
+    opacity var(--ControlAnimationDuration) var(--ControlAnimationEasing);
+}
+
+/* Если есть подпись справа, скругляем карточку по --ControlCornerRadius и даем внутренние отступы в интерактивном режиме */
+.withLabel.interactive {
+  border-radius: var(--ControlCornerRadius);
+  padding: 6px var(--ControlPaddingInline) 6px 6px;
+  margin: -6px calc(var(--ControlPaddingInline) * -1) -6px -6px;
+}
+
+.personPicture:focus-visible {
+  box-shadow: 0 0 0 3px var(--keyboard-focus-indicator);
+}
+
+/* ───────────── Интерактивные состояния (hover / active) ───────────── */
+
+.interactive {
+  cursor: pointer;
+}
+
+/* Hover & Active для карточки с подписью справа */
+.withLabel.interactive:hover {
+  background-color: var(--fill-tertiary);
+}
+
+.withLabel.interactive:active {
+  background-color: var(--fill-secondary);
+  transform: scale(0.985);
+}
+
+/* Hover & Active для одиночного круглого аватара (без текста справа) */
+.interactive:not(.withLabel):hover .avatar {
+  background-color: var(--fill-primary);
+  border-color: var(--separator-opaque);
+}
+
+.interactive:not(.withLabel):hover .image {
+  filter: brightness(1.06);
+}
+
+.interactive:not(.withLabel):active .avatar {
+  transform: scale(0.94);
+  background-color: var(--control-surface);
+}
+
+.interactive:not(.withLabel):active .image {
+  filter: brightness(0.92);
+}
+
+/* ───────────── Состояние Disabled ───────────── */
+
+.disabled {
+  opacity: 0.45;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* ───────────── Внутренние элементы аватара ───────────── */
+
+.avatarContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--pp-size);
+  height: var(--pp-size);
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--CircularCornerRadius);
+  background-color: var(--fill-secondary);
+  color: var(--label-primary);
+  border: 1px solid var(--separator);
+  box-shadow: var(--window-inner-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition:
+    background-color var(--ControlAnimationDuration)
+      var(--ControlAnimationEasing),
+    border-color var(--ControlAnimationDuration) var(--ControlAnimationEasing),
+    transform var(--ControlAnimationDuration) var(--ControlAnimationEasing);
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: filter var(--ControlAnimationDuration)
+    var(--ControlAnimationEasing);
+}
+
+.initials {
+  font-size: calc(var(--pp-size) * 0.38);
+  line-height: 1;
+  color: var(--label-primary);
+  letter-spacing: -0.02em;
+}
+
+.glyph {
+  width: 55%;
+  height: 55%;
+  color: var(--label-secondary);
+}
+
+.badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding-inline: 5px;
+  border-radius: var(--CircularCornerRadius);
+  background-color: var(--control-accent);
+  color: var(--text-selected);
+  border: 2px solid var(--window-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+/* ───────────── Текстовая подпись справа ───────────── */
+
+.labelGroup {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.primaryLabel {
+  color: var(--label-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.secondaryLabel {
+  color: var(--label-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

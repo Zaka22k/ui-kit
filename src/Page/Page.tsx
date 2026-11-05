@@ -64,25 +64,33 @@ const Page = ({
   const heroRef = useRef<HTMLDivElement>(null);
   const hasHero = Boolean(hero);
 
-  // Шапки таблиц, прилипших под хедером: подложка хедера растягивается на самую высокую.
-  // Значение пишется прямо в CSS-переменную, без ререндера страницы.
   const stuckRef = useRef(new Map<string, number>());
-  const sticky = useMemo<PageStickyContextValue>(
-    () => ({
+  const sticky = useMemo<PageStickyContextValue>(() => {
+    const updateCssVar = () => {
+      const stuck = stuckRef.current;
+      const max = stuck.size > 0 ? Math.max(0, ...stuck.values()) : 0;
+      pageRef.current?.style.setProperty("--page-stuck-extra", `${max}px`);
+    };
+
+    return {
       setStuckExtra: (key, height) => {
         const stuck = stuckRef.current;
-        if (height > 0) stuck.set(key, height);
-        else stuck.delete(key);
-        pageRef.current?.style.setProperty(
-          "--page-stuck-extra",
-          `${Math.max(0, ...stuck.values())}px`,
-        );
-      },
-    }),
-    [],
-  );
+        if (Number.isFinite(height) && height > 0) {
+          stuck.set(key, height);
+        } else {
+          stuck.delete(key);
+        }
+        updateCssVar();
 
-  // Баннер под тулбаром: пока он лежит под хедером, подложку хедера гасим
+        return () => {
+          if (stuck.delete(key)) {
+            updateCssVar();
+          }
+        };
+      },
+    };
+  }, []);
+
   const [heroUnderHeader, setHeroUnderHeader] = useState(hasHero);
   useEffect(() => {
     const el = heroRef.current;

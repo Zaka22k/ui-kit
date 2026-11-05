@@ -355,16 +355,13 @@ export interface NavigationViewProps extends Omit<
     event: React.SyntheticEvent,
     info: { value: string | number },
   ) => void;
+
   openCategories?: Array<string | number>;
   defaultOpenCategories?: Array<string | number>;
   onOpenCategoriesChange?: (categories: Array<string | number>) => void;
+  allowMultipleOpenCategories?: boolean;
   paneAriaLabel?: string;
   toggleButtonLabel?: string;
-  /**
-   * Панель парит над страницей, а страница занимает всю ширину (как сайдбар
-   * Liquid Glass). Вместе с <NavBackgroundExtension> позволяет продлить
-   * изображение под панель.
-   */
   extendContentUnderPane?: boolean;
 }
 export function NavigationView({
@@ -391,6 +388,7 @@ export function NavigationView({
   openCategories,
   defaultOpenCategories = [],
   onOpenCategoriesChange,
+  allowMultipleOpenCategories = false,
   paneAriaLabel = "Основная навигация",
   toggleButtonLabel = "Показать или скрыть боковую панель",
   extendContentUnderPane = false,
@@ -523,13 +521,23 @@ export function NavigationView({
 
   const toggleCategory = useCallback(
     (value: string | number) => {
-      const next = openCats.includes(value)
+      const isCurrentlyOpen = openCats.includes(value);
+      const next = isCurrentlyOpen
         ? openCats.filter((v) => v !== value)
-        : [...openCats, value];
+        : allowMultipleOpenCategories
+          ? [...openCats, value]
+          : [value];
+
       if (!openCatsControlled) setOpenCats(next);
       onOpenCategoriesChange?.(next);
     },
-    [openCats, openCatsControlled, setOpenCats, onOpenCategoriesChange],
+    [
+      openCats,
+      openCatsControlled,
+      setOpenCats,
+      onOpenCategoriesChange,
+      allowMultipleOpenCategories,
+    ],
   );
 
   const ctx = useMemo<NavContextValue>(

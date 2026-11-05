@@ -12,3 +12,6 @@ export * from "./Theme";
 export * from "./MenuButton";
 export * from "./List";
 export { FrostedGlass } from "./FrostedGlass";
+export * from "./SegmentedControl";
+export * from "./PersonPicture";
+export { TabBar } from "./TabBar";

@@ -54,15 +54,13 @@
 .hero::after {
   content: "";
   position: absolute;
-  inset: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: var(--page-hero-fade, 56px);
   pointer-events: none;
   z-index: 1;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    transparent 55%,
-    var(--window-bg) 100%
-  );
+  background: linear-gradient(to bottom, transparent 0%, var(--window-bg) 100%);
 }
 
 .pageBody {
