@@ -330,6 +330,7 @@ export interface NavigationViewProps extends Omit<
   children?: ReactNode;
   pageKey?: PageKey;
   pageTransition?: PageTransitionSetting;
+  headerMenuItems?: ReactNode;
   menuItems?: ReactNode;
   footerMenuItems?: ReactNode;
   paneTitle?: ReactNode;
@@ -364,10 +365,12 @@ export interface NavigationViewProps extends Omit<
   toggleButtonLabel?: string;
   extendContentUnderPane?: boolean;
 }
+
 export function NavigationView({
   children,
   pageKey,
   pageTransition = "auto",
+  headerMenuItems,
   menuItems,
   footerMenuItems,
   paneTitle,
@@ -614,9 +617,9 @@ export function NavigationView({
           aria-label={paneAriaLabel}
           onKeyDown={handlePaneKeyDown}
         >
-          {(paneTitle || showToggleButton) && (
+          {((open && paneTitle) || showToggleButton) && (
             <div className={styles.paneTop}>
-              {paneTitle && (
+              {open && paneTitle && (
                 <span className={styles.paneTitle}>{paneTitle}</span>
               )}
               {showToggleButton && (
@@ -639,6 +642,9 @@ export function NavigationView({
             <div className={styles.paneSlot}>
               {renderSlot(paneCustomContent)}
             </div>
+          )}
+          {open && headerMenuItems && (
+            <div className={styles.paneHeaderItems}>{headerMenuItems}</div>
           )}
           <div className={styles.paneBody}>{menuItems}</div>
           {footerMenuItems && (
@@ -771,6 +777,7 @@ export function NavSubItem<E extends ElementType = "button">(
 ) {
   return <NavLinkBase {...(props as NavLinkBaseProps)} isSub />;
 }
+
 export interface NavCategoryProps {
   value: string | number;
   icon?: ReactNode;

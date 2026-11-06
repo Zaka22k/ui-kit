@@ -44,11 +44,6 @@
 .hero {
   position: relative;
   margin-top: calc(var(--page-header-height) * -1);
-
-  margin-left: calc(
-    (var(--page-padding, 0px) + var(--nav-safe-left, 0px)) * -1
-  );
-  margin-right: calc(var(--page-padding, 0px) * -1);
 }
 
 .hero::after {

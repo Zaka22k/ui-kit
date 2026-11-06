@@ -1,12 +1,22 @@
+/* SegmentedControl.module.css */
+
 .root {
-  --sc-height: var(--ControlHeight, 32px);
-  --sc-padding: 3px;
+  /* --- Общие переменные --- */
   --sc-radius: var(--CircularCornerRadius, 9999px);
   --sc-thumb-radius: var(--CircularCornerRadius, 9999px);
   --sc-font-size: var(--font-body, 0.875rem);
-  --sc-icon-size: 16px;
-  --sc-segment-px: 18px;
-  --sc-gap: var(--ControlLabelGap, 6px);
+  --sc-gap: 6px;
+
+  /* Дефолтная высота (Solid) */
+  --sc-height: var(--ControlHeight, 32px);
+  --sc-padding: 3px;
+
+  /* Цвета */
+  --bg-color: var(--fill-secondary);
+  --thumb-bg: var(--control-surface);
+  --thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --text-color: var(--text-primary);
+  --text-selected: var(--text-primary);
 
   position: relative;
   isolation: isolate;
@@ -18,46 +28,99 @@
   height: var(--sc-height);
   padding: var(--sc-padding);
   border-radius: var(--sc-radius);
-  background-color: var(--fill-secondary);
-  box-shadow:
-    inset 0 1px 2px light-dark(rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.4)),
-    inset 0 0 0 1px var(--separator);
+  background-color: var(--bg-color);
   user-select: none;
-  touch-action: pan-y;
-  vertical-align: middle;
 }
+
+/* === Варианты (Variants) === */
+
+/* 1. Solid */
+.solid {
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.06),
+    inset 0 0 0 1px var(--separator);
+}
+
+/* 2. Glass */
+.glass {
+  --bg-color: transparent;
+  --thumb-bg: transparent;
+  --thumb-shadow: none;
+  --sc-padding: 3px;
+}
+
+/* Коррекция высоты для Glass Inline (36px) */
+.glass.inline {
+  --sc-height: 36px;
+  --sc-font-size: 0.875rem;
+}
+
+/* 3. Pills */
+.pills {
+  --sc-padding: 0;
+  --bg-color: transparent;
+  --thumb-shadow: none;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: 8px;
+  padding: 4px 20px;
+  margin: 0 -20px;
+  width: calc(100% + 40px);
+}
+.pills::-webkit-scrollbar {
+  display: none;
+}
+
+.pills .segment {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 99px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: var(--control-surface, #fff);
+  color: var(--text-selected);
+  transition: all 0.2s ease;
+}
+.pills .selected {
+  border-color: transparent;
+  color: var(--text-selected);
+  z-index: 2;
+}
+.pills .thumbTrack {
+  top: 4px;
+  bottom: 4px;
+  border-radius: 99px;
+}
+.pills .thumbContent {
+  background-color: #000;
+  border-radius: 99px;
+}
+.pills.accent .thumbContent {
+  background-color: var(--control-accent);
+}
+
+/* === Компоновка (Layouts) === */
 
 .autoWidth {
   grid-auto-columns: auto;
 }
-
 .fullWidth {
   display: grid;
   width: 100%;
 }
 
-.rounded {
-  --sc-radius: var(--ControlCornerRadius, 8px);
-  --sc-thumb-radius: max(4px, calc(var(--sc-radius) - var(--sc-padding)));
+.stacked {
+  --sc-height: 58px;
+  --sc-font-size: 0.75rem;
+  --sc-gap: 4px;
+  --sc-icon-size: 22px;
+  --sc-padding: 4px;
 }
 
-.small {
-  --sc-height: 26px;
-  --sc-padding: 2px;
-  --sc-font-size: var(--font-caption, 0.75rem);
-  --sc-icon-size: 14px;
-  --sc-segment-px: 12px;
-}
-
-.large {
-  --sc-height: 36px;
-  --sc-padding: 3px;
-  --sc-segment-px: 22px;
-  --sc-icon-size: 18px;
-}
-
-/* ───────────── Плавающий ползунок (Single mode) ───────────── */
-
+/* === Ползунок (Thumb) === */
 .thumbTrack {
   position: absolute;
   top: var(--sc-padding);
@@ -68,84 +131,35 @@
   pointer-events: none;
   will-change: transform, width;
   transition:
-    transform var(--ControlAnimationDuration, 200ms)
-      var(--ControlAnimationEasing, cubic-bezier(0.2, 0.8, 0.2, 1)),
-    width var(--ControlAnimationDuration, 200ms)
-      var(--ControlAnimationEasing, cubic-bezier(0.2, 0.8, 0.2, 1));
+    transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .thumbNoAnim {
   transition: none;
 }
 
-.thumbMorph {
-  position: relative;
+.thumbContent {
   width: 100%;
   height: 100%;
   border-radius: inherit;
-  transition: transform var(--ControlAnimationDuration, 200ms)
-    var(--ControlAnimationEasing, cubic-bezier(0.2, 0.8, 0.2, 1));
+  transition: transform 200ms ease;
 }
 
-.thumbTransitioning .thumbMorph {
-  transform: scale(1.06, 1.24);
+.solid .thumbContent {
+  background-color: var(--thumb-bg);
+  box-shadow: var(--thumb-shadow);
 }
 
-.thumbRestingFill {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background-color: var(--control-surface);
-  box-shadow: 0 1px 3px light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.35));
-  transition: opacity 150ms
-    var(--ControlAnimationEasing, cubic-bezier(0.2, 0.8, 0.2, 1));
+.thumbMoving .thumbContent {
+  transform: scale(0.95);
 }
 
-.accent .thumbRestingFill {
-  background-color: var(--control-accent);
+.accent {
+  --text-selected: var(--control-accent);
 }
 
-.thumbTransitioning .thumbRestingFill {
-  opacity: 0;
-}
-
-.thumbGlass {
-  width: 100%;
-  height: 100%;
-}
-
-/* ───────────── Multiple / Momentary и сегменты ───────────── */
-
-.segmentGlassWrap {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: var(--sc-thumb-radius);
-  pointer-events: none;
-  animation: segmentGlassIn 140ms
-    var(--ControlAnimationEasing, cubic-bezier(0.2, 0.8, 0.2, 1));
-}
-
-.segment:active .thumbRestingFill {
-  opacity: 0;
-}
-
-.segmentGlass {
-  width: 100%;
-  height: 100%;
-}
-
-@keyframes segmentGlassIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
+/* === Сегмент (Кнопка) === */
 .segment {
   position: relative;
   z-index: 2;
@@ -153,86 +167,35 @@
   align-items: center;
   justify-content: center;
   gap: var(--sc-gap);
-  min-width: 0;
-  height: 100%;
-  padding: 0 var(--sc-segment-px);
+  padding: 0 12px;
   border: 0;
   border-radius: var(--sc-thumb-radius);
   background: transparent;
   color: var(--text-primary);
   font-family: inherit;
   font-size: var(--sc-font-size);
-  font-weight: 600;
-  line-height: 1;
-  white-space: nowrap;
+  font-weight: 400;
   cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
   transition:
-    color var(--ControlAnimationDuration, 200ms)
-      var(--ControlAnimationEasing, cubic-bezier(0.2, 0.8, 0.2, 1)),
-    opacity var(--ControlAnimationDuration, 200ms)
-      var(--ControlAnimationEasing, cubic-bezier(0.2, 0.8, 0.2, 1));
+    opacity 0.2s,
+    color 0.2s;
 }
 
-.segment::before {
-  content: "";
-  position: absolute;
-  left: -0.5px;
-  top: 24%;
-  bottom: 24%;
-  width: 1px;
-  background-color: var(--separator);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 140ms ease;
+.stacked .segment {
+  flex-direction: column;
 }
-
-.segment:focus-visible {
-  outline: 2px solid var(--keyboard-focus-indicator);
-  outline-offset: 2px;
-}
-
 .selected {
-  color: var(--text-primary);
-}
-
-.accent .selected {
   color: var(--text-selected);
 }
-
-.disabled,
-.segment:disabled {
+.disabled {
   opacity: 0.38;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
-.icon {
+.iconWrap {
+  position: relative;
   display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: var(--sc-icon-size);
-  height: var(--sc-icon-size);
-}
-
-.icon > svg {
-  width: 100%;
-  height: 100%;
-}
-
-.label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .thumbTrack,
-  .thumbMorph,
-  .thumbRestingFill,
-  .segment,
-  .segment::before,
-  .segmentGlassWrap {
-    transition: none;
-    animation: none;
-  }
 }

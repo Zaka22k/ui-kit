@@ -126,6 +126,7 @@
   pointer-events: auto;
 }
 
+.minimal.strip .paneHeaderItems,
 .minimal.strip .paneBody,
 .minimal.strip .paneFooterItems,
 .minimal.strip .paneSlot {
@@ -272,20 +273,31 @@
   white-space: nowrap;
 }
 
-/* Свёрнутая панель: остаётся только кнопка, по центру полосы */
+/* Свёрнутая панель: остаётся только кнопка, по центру полосы, элементы заголовка скрыты */
 .strip .paneTop {
   justify-content: center;
   padding-right: 10px;
   padding-left: 10px;
 }
 
-.strip .paneTitle {
+.strip .paneTitle,
+.strip .paneHeaderItems,
+.strip .paneSlot {
   display: none;
 }
 
 .paneSlot {
   flex: none;
   padding: 6px 18px;
+}
+
+.paneHeaderItems {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px 4px;
+  transition: padding var(--nav-anim-duration) var(--nav-anim-easing);
 }
 
 .paneBody {
@@ -298,6 +310,7 @@
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: none;
+  transition: padding var(--nav-anim-duration) var(--nav-anim-easing);
 }
 
 .paneBody::-webkit-scrollbar {
@@ -310,6 +323,18 @@
   flex-direction: column;
   gap: 2px;
   padding: 4px 10px 12px;
+  transition: padding var(--nav-anim-duration) var(--nav-anim-easing);
+}
+
+/*
+ * В свёрнутой полосе (leftCompact) боковые отступы списков выравнивают ширину
+ * элементов ровно под высоту (--nav-item-height = 32px), чтобы выбранные пункты
+ * и категории были идеально круглыми (32x32px), а иконка не смещалась по оси X.
+ */
+.strip .paneBody,
+.strip .paneFooterItems {
+  padding-right: calc((var(--nav-compact-width) - var(--nav-item-height)) / 2);
+  padding-left: calc((var(--nav-compact-width) - var(--nav-item-height)) / 2);
 }
 
 /* ======================= Пункты ======================= */
@@ -332,7 +357,16 @@
   text-decoration: none;
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    padding var(--nav-anim-duration) var(--nav-anim-easing),
+    gap var(--nav-anim-duration) var(--nav-anim-easing);
+}
+
+.strip .item {
+  gap: 0;
+  padding-right: calc((var(--nav-item-height) - var(--nav-icon-size)) / 2);
+  padding-left: calc((var(--nav-item-height) - var(--nav-icon-size)) / 2);
 }
 
 .item:hover {
@@ -369,6 +403,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: opacity var(--nav-anim-duration) var(--nav-anim-easing);
+}
+
+.strip .content {
+  opacity: 0;
 }
 
 /* ---------- Выбранный пункт ---------- */
@@ -396,8 +435,21 @@
 .chevron {
   display: inline-flex;
   flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  overflow: hidden;
   color: var(--label-secondary);
-  transition: transform var(--nav-anim-duration) var(--nav-anim-easing);
+  transition:
+    transform var(--nav-anim-duration) var(--nav-anim-easing),
+    width var(--nav-anim-duration) var(--nav-anim-easing),
+    opacity var(--nav-anim-duration) var(--nav-anim-easing);
+}
+
+.strip .chevron {
+  width: 0;
+  opacity: 0;
 }
 
 .chevronOpen {
@@ -530,7 +582,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .paneNav,
+  .paneHeaderItems,
+  .paneBody,
+  .paneFooterItems,
   .item,
+  .content,
   .chevron,
   .group,
   .groupOpen,
