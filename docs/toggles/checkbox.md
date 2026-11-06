@@ -103,3 +103,4 @@ const someChecked = values.some(Boolean) && !allChecked;
 - **Зарезервированные атрибуты:** Пропсы `type`, `role`, `size` и `children` исключены из типов. Текст подписи передаётся только через проп `label`.
 - **Пустая строка в `label`:** Проверка `hasLabel` отсекает только `undefined`, `null` и `false`. Если передать `label=""`, отрендерится пустой `<span className={styles.label}>`, из-за чего появится лишний отступ (`gap`).
 - **Поддержка браузерами:** Стили компонента опираются на CSS-селектор `:has()` (требуется Chrome 105+, Safari 15.4+, Firefox 121+).
+- **Требуется React 19:** Компонент вызывает `useFormStatus` из `react-dom`, которого нет в React 18.
