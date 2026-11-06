@@ -5,11 +5,8 @@ import type { ChangeEvent, CSSProperties, KeyboardEvent } from "react";
 import { useFormStatus } from "react-dom";
 import { FrostedGlass } from "../FrostedGlass";
 import { cx } from "../utils/cx";
-import {
-  hasLabel,
-  useForwardedInputRef,
-  useSyncDefaultChecked,
-} from "./shared";
+import { useForwardedRef } from "../utils/useForwardedRef";
+import { hasLabel, useSyncDefaultChecked } from "./shared";
 import { type ToggleBaseProps } from "./ToggleBaseProps";
 import styles from "./Toggles.module.css";
 
@@ -66,7 +63,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   const { pending } = useFormStatus();
   const isDisabled = disabled || pending;
 
-  const { inputRef, setRefs } = useForwardedInputRef(forwardedRef);
+  const { ref: inputRef, setRefs } = useForwardedRef(forwardedRef);
 
   const g = SWITCH_SIZES[size];
 

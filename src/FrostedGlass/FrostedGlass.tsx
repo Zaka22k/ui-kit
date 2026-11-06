@@ -1,26 +1,18 @@
 "use client";
 
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import type {
   CSSProperties,
   HTMLAttributes,
   PointerEvent as ReactPointerEvent,
   ReactNode,
 } from "react";
+import { useForwardedRef } from "../utils/useForwardedRef";
+import { useIsomorphicLayoutEffect } from "../utils/useIsomorphicLayoutEffect";
 import { edgeShadows, shadowCss } from "./frostedGlassMath";
 import { resolveOptions } from "./frostedGlassOptions";
 import type { FrostedGlassOptions } from "./frostedGlassOptions";
-import {
-  useIsomorphicLayoutEffect,
-  useFrostedGlassTokens,
-} from "./frostedGlassTokens";
+import { useFrostedGlassTokens } from "./frostedGlassTokens";
 
 /**
  * Props of FrostedGlass: all glass options plus any native div attribute.
@@ -119,15 +111,7 @@ export const FrostedGlass = forwardRef<HTMLDivElement, FrostedGlassProps>(
     },
     forwardedRef,
   ) {
-    const innerRef = useRef<HTMLDivElement | null>(null);
-    const setRefs = useCallback(
-      (node: HTMLDivElement | null) => {
-        innerRef.current = node;
-        if (typeof forwardedRef === "function") forwardedRef(node);
-        else if (forwardedRef) forwardedRef.current = node;
-      },
-      [forwardedRef],
-    );
+    const { ref: innerRef, setRefs } = useForwardedRef(forwardedRef);
 
     // Token, then prop, then default. / Токен, затем пропс, затем значение по умолчанию.
     const tokens = useFrostedGlassTokens(innerRef);
@@ -219,7 +203,11 @@ export const FrostedGlass = forwardRef<HTMLDivElement, FrostedGlassProps>(
       if (Math.abs(s.x - s.t) < 0.0004 && s.v === 0) return;
       s.last = performance.now();
       const step = (now: number) => {
-        const dt = Math.min(0.032, (now - s.last) / 1000);
+        // The timestamp of requestAnimationFrame can be earlier than `performance.now()` taken when the
+        // loop started, so the first step may be negative: never go back in time.
+        // Метка времени requestAnimationFrame может быть раньше `performance.now()` в момент запуска цикла,
+        // и первый шаг выйдет отрицательным: назад во времени не идём.
+        const dt = Math.max(0, Math.min(0.032, (now - s.last) / 1000));
         s.last = now;
         const { stiffness: k, bounce: b } = springCfg.current;
         // bounce 0 is critical damping, 1 is a very light damping

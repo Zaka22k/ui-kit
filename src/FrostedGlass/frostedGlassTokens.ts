@@ -5,13 +5,11 @@
  * Чтение CSS-токенов `--fg-*`: регистрация с типами, чтение из вычисленного стиля
  * и хук, который держит значения актуальными при смене темы или стилей.
  */
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
+import { useIsomorphicLayoutEffect } from "../utils/useIsomorphicLayoutEffect";
 import { FROSTED_GLASS_TOKENS } from "./frostedGlassOptions";
 import type { TokenDef, TokenValues } from "./frostedGlassOptions";
-
-export const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const SYNTAX: Record<TokenDef["kind"], string> = {
   number: "<number>",
@@ -113,18 +111,88 @@ export function readTokenValues(el: HTMLElement): TokenValues {
 
 const EMPTY: TokenValues = {};
 
+// ---- One shared observer / Один общий наблюдатель ----
+
+/**
+ * A glass panel that wants to hear about changes of its ancestors.
+ * Панель, которой нужно знать об изменениях своих предков.
+ */
+interface Subscriber {
+  el: HTMLElement;
+  notify: () => void;
+}
+
+const subscribers = new Set<Subscriber>();
+let observer: MutationObserver | null = null;
+let schemeQuery: MediaQueryList | null = null;
+
+/**
+ * Parts of an inline style that change all the time and never carry a token: the spring `scale` and the
+ * pointer position of FrostedGlass itself. They are cut out before the old and the new style are compared.
+ * Части inline-стиля, которые меняются постоянно и токенов не несут: пружинный `scale` и положение
+ * указателя самого FrostedGlass. Перед сравнением старого и нового стиля они вырезаются.
+ */
+const VOLATILE_STYLE = /(?<![\w-])(?:scale|--fg-pointer-[xy])\s*:[^;]*;?/g;
+
+/**
+ * Whether an attribute change can affect tokens. Inline styles count only when they carry custom
+ * properties and really changed, so ordinary style animation does not cost a read per frame.
+ * Может ли смена атрибута повлиять на токены. Inline-стили учитываются, только если в них есть
+ * пользовательские свойства и стиль правда изменился, чтобы обычная анимация style не стоила чтения
+ * на каждый кадр.
+ */
+function isRelevant(r: MutationRecord): boolean {
+  if (r.attributeName !== "style") return true;
+  const now = ((r.target as Element).getAttribute("style") ?? "").replace(VOLATILE_STYLE, "");
+  const before = (r.oldValue ?? "").replace(VOLATILE_STYLE, "");
+  return now !== before && (now.includes("--") || before.includes("--"));
+}
+
+const notifyAll = () => {
+  subscribers.forEach((s) => s.notify());
+};
+
+function startObserving() {
+  observer = new MutationObserver((records) => {
+    const relevant = records.filter(isRelevant);
+    if (relevant.length === 0) return;
+    // Only the ancestors of a panel matter; its own attributes are read after each render.
+    // Важны только предки панели; её собственные атрибуты читаются после каждого рендера.
+    subscribers.forEach((s) => {
+      if (relevant.some((r) => r.target !== s.el && r.target.contains(s.el))) s.notify();
+    });
+  });
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeOldValue: true,
+    subtree: true,
+  });
+  if (typeof matchMedia === "function") {
+    schemeQuery = matchMedia("(prefers-color-scheme: dark)");
+    schemeQuery.addEventListener("change", notifyAll);
+  }
+}
+
+function stopObserving() {
+  observer?.disconnect();
+  observer = null;
+  schemeQuery?.removeEventListener("change", notifyAll);
+  schemeQuery = null;
+}
+
 /**
  * Keeps the token values of an element up to date. They are read after every render of the component
  * and again when something that can change them happens: an attribute of any ancestor changes
  * (class, data-theme, or an inline style that declares custom properties), or the system colour scheme
- * changes. Reads are merged into one per frame. Changes made only by a stylesheet rule that starts to
- * apply without any attribute change (for example :hover on an ancestor) are not noticed.
+ * changes. All panels share one MutationObserver on the document, and every panel merges its reads into
+ * one per frame. Changes made only by a stylesheet rule that starts to apply without any attribute change
+ * (for example :hover on an ancestor) are not noticed.
  *
  * Держит значения токенов элемента актуальными. Они читаются после каждого рендера компонента и ещё раз,
  * когда происходит то, что может их изменить: меняется атрибут любого предка (class, data-theme или
- * inline-стиль с пользовательскими свойствами) либо системная цветовая схема. Чтения объединяются
- * в одно за кадр. Изменения, вызванные только правилом таблицы стилей без смены атрибутов
- * (например, :hover у предка), не замечаются.
+ * inline-стиль с пользовательскими свойствами) либо системная цветовая схема. Все панели делят один
+ * MutationObserver на документ, а каждая панель объединяет свои чтения в одно за кадр. Изменения,
+ * вызванные только правилом таблицы стилей без смены атрибутов (например, :hover у предка), не замечаются.
  */
 export function useFrostedGlassTokens(ref: RefObject<HTMLElement | null>): TokenValues {
   const [tokens, setTokens] = useState<TokenValues>(EMPTY);
@@ -151,7 +219,7 @@ export function useFrostedGlassTokens(ref: RefObject<HTMLElement | null>): Token
     const el = ref.current;
     if (!el) return;
     let frame = 0;
-    const schedule = () => {
+    const notify = () => {
       if (frame) return;
       frame = requestAnimationFrame(() => {
         frame = 0;
@@ -159,29 +227,13 @@ export function useFrostedGlassTokens(ref: RefObject<HTMLElement | null>): Token
       });
     };
 
-    const observer = new MutationObserver((records) => {
-      for (const r of records) {
-        // Inline styles are watched only when they carry custom properties, so ordinary
-        // style animation of an ancestor does not cost a read per frame.
-        // Inline-стили отслеживаются, только если в них есть пользовательские свойства, чтобы обычная
-        // анимация style у предка не стоила чтения на каждый кадр.
-        if (r.attributeName === "style") {
-          const now = (r.target as Element).getAttribute("style") ?? "";
-          if (!now.includes("--") && !(r.oldValue ?? "").includes("--")) continue;
-        }
-        schedule();
-        return;
-      }
-    });
-    for (let n = el.parentElement; n; n = n.parentElement) {
-      observer.observe(n, { attributes: true, attributeOldValue: true });
-    }
-    const mq = typeof matchMedia === "function" ? matchMedia("(prefers-color-scheme: dark)") : null;
-    mq?.addEventListener("change", schedule);
+    const subscriber: Subscriber = { el, notify };
+    subscribers.add(subscriber);
+    if (subscribers.size === 1) startObserving();
 
     return () => {
-      observer.disconnect();
-      mq?.removeEventListener("change", schedule);
+      subscribers.delete(subscriber);
+      if (subscribers.size === 0) stopObserving();
       if (frame) cancelAnimationFrame(frame);
     };
   }, [ref]);

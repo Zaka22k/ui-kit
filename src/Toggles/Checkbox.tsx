@@ -1,23 +1,18 @@
 "use client";
 
-import { forwardRef, useEffect, useLayoutEffect } from "react";
+import { forwardRef } from "react";
 import type { ChangeEvent } from "react";
 import { useFormStatus } from "react-dom";
 import { cx } from "../utils/cx";
-import {
-  hasLabel,
-  useForwardedInputRef,
-  useSyncDefaultChecked,
-} from "./shared";
+import { useForwardedRef } from "../utils/useForwardedRef";
+import { useIsomorphicLayoutEffect } from "../utils/useIsomorphicLayoutEffect";
+import { hasLabel, useSyncDefaultChecked } from "./shared";
 import { type ToggleBaseProps } from "./ToggleBaseProps";
 import styles from "./Toggles.module.css";
 
 export type CheckboxProps = ToggleBaseProps & {
   indeterminate?: boolean;
 };
-
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   function Checkbox(
@@ -38,7 +33,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
     const { pending } = useFormStatus();
     const isDisabled = disabled || pending;
 
-    const { inputRef, setRefs } = useForwardedInputRef(forwardedRef);
+    const { ref: inputRef, setRefs } = useForwardedRef(forwardedRef);
 
     useIsomorphicLayoutEffect(() => {
       if (inputRef.current) inputRef.current.indeterminate = indeterminate;

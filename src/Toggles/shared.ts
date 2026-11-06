@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from "react";
-import type { ForwardedRef, ReactNode, RefObject } from "react";
+import { useEffect } from "react";
+import type { ReactNode, RefObject } from "react";
 
 /**
  * Whether the label should be rendered. `undefined`, `null`, `false` and an
@@ -9,28 +9,6 @@ import type { ForwardedRef, ReactNode, RefObject } from "react";
  */
 export const hasLabel = (label: ReactNode): boolean =>
   label !== undefined && label !== null && label !== false && label !== "";
-
-/**
- * Keeps an own ref to the input and forwards the node to the outer ref.
- * Хранит собственный ref на input и передаёт узел во внешний ref.
- */
-export function useForwardedInputRef(
-  forwardedRef: ForwardedRef<HTMLInputElement>,
-): {
-  inputRef: RefObject<HTMLInputElement | null>;
-  setRefs: (node: HTMLInputElement | null) => void;
-} {
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const setRefs = useCallback(
-    (node: HTMLInputElement | null) => {
-      inputRef.current = node;
-      if (typeof forwardedRef === "function") forwardedRef(node);
-      else if (forwardedRef) forwardedRef.current = node;
-    },
-    [forwardedRef],
-  );
-  return { inputRef, setRefs };
-}
 
 /**
  * For an uncontrolled input, applies a changed `defaultChecked` to the DOM.
