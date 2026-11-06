@@ -363,7 +363,8 @@
     gap var(--nav-anim-duration) var(--nav-anim-easing);
 }
 
-.strip .item {
+/* Ограничиваем .paneNav, чтобы не задеть портал .flyout внутри .root.strip */
+.strip .paneNav .item {
   gap: 0;
   padding-right: calc((var(--nav-item-height) - var(--nav-icon-size)) / 2);
   padding-left: calc((var(--nav-item-height) - var(--nav-icon-size)) / 2);
@@ -406,7 +407,7 @@
   transition: opacity var(--nav-anim-duration) var(--nav-anim-easing);
 }
 
-.strip .content {
+.strip .paneNav .content {
   opacity: 0;
 }
 
@@ -447,7 +448,7 @@
     opacity var(--nav-anim-duration) var(--nav-anim-easing);
 }
 
-.strip .chevron {
+.strip .paneNav .chevron {
   width: 0;
   opacity: 0;
 }
@@ -547,7 +548,7 @@
     opacity var(--nav-anim-duration) var(--nav-anim-easing);
 }
 
-.strip .sectionHeader {
+.strip .paneNav .sectionHeader {
   max-height: 0;
   padding-top: 0;
   padding-bottom: 0;
