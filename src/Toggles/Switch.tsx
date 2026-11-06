@@ -1,26 +1,21 @@
 "use client";
 
-import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
-import type {
-  ChangeEvent,
-  CSSProperties,
-  KeyboardEvent,
-  ReactNode,
-} from "react";
+import { forwardRef, useEffect, useState } from "react";
+import type { ChangeEvent, CSSProperties, KeyboardEvent } from "react";
 import { useFormStatus } from "react-dom";
 import { FrostedGlass } from "../FrostedGlass";
+import { cx } from "../utils/cx";
+import {
+  hasLabel,
+  useForwardedInputRef,
+  useSyncDefaultChecked,
+} from "./shared";
 import { type ToggleBaseProps } from "./ToggleBaseProps";
 import styles from "./Toggles.module.css";
 
 export type SwitchProps = ToggleBaseProps & {
   size?: "regular" | "mini";
 };
-
-const cx = (...parts: Array<string | false | null | undefined>): string =>
-  parts.filter(Boolean).join(" ");
-
-const hasLabel = (label: ReactNode): boolean =>
-  label !== undefined && label !== null && label !== false;
 
 const SWITCH_SIZES = {
   regular: {
@@ -29,8 +24,6 @@ const SWITCH_SIZES = {
     thumbWidth: 36,
     thumbHeight: 28,
     inset: 2,
-    bezel: 12,
-    glassHeight: 20,
     specularWidth: 2,
   },
   mini: {
@@ -39,8 +32,6 @@ const SWITCH_SIZES = {
     thumbWidth: 22,
     thumbHeight: 18,
     inset: 2,
-    bezel: 8,
-    glassHeight: 13,
     specularWidth: 1.5,
   },
 } as const;
@@ -75,15 +66,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   const { pending } = useFormStatus();
   const isDisabled = disabled || pending;
 
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const setRefs = useCallback(
-    (node: HTMLInputElement | null) => {
-      inputRef.current = node;
-      if (typeof forwardedRef === "function") forwardedRef(node);
-      else if (forwardedRef) forwardedRef.current = node;
-    },
-    [forwardedRef],
-  );
+  const { inputRef, setRefs } = useForwardedInputRef(forwardedRef);
 
   const g = SWITCH_SIZES[size];
 
@@ -91,15 +74,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   const [sliding, setSliding] = useState(false);
   const switching = !isDisabled && (pressed || sliding);
 
-  useEffect(() => {
-    if (
-      checked === undefined &&
-      defaultChecked !== undefined &&
-      inputRef.current
-    ) {
-      inputRef.current.checked = defaultChecked;
-    }
-  }, [checked, defaultChecked]);
+  useSyncDefaultChecked(inputRef, checked, defaultChecked);
 
   useEffect(() => {
     if (!sliding) return;

@@ -101,6 +101,7 @@ const someChecked = values.some(Boolean) && !allChecked;
 
 - **Стилизация через `className` и `style`:** Оба свойства передаются на внешнюю обёртку `<label>`, а не на `<input>`.
 - **Зарезервированные атрибуты:** Пропсы `type`, `role`, `size` и `children` исключены из типов. Текст подписи передаётся только через проп `label`.
-- **Пустая строка в `label`:** Проверка `hasLabel` отсекает только `undefined`, `null` и `false`. Если передать `label=""`, отрендерится пустой `<span className={styles.label}>`, из-за чего появится лишний отступ (`gap`).
+- **Пустая подпись:** Значения `label` `undefined`, `null`, `false` и `""` не рисуют подпись, поэтому лишнего отступа (`gap`) нет. Без подписи передайте `aria-label`.
+- **Экспорт типов:** Из пакета доступны `CheckboxProps`, `SwitchProps` и `ToggleBaseProps`.
 - **Поддержка браузерами:** Стили компонента опираются на CSS-селектор `:has()` (требуется Chrome 105+, Safari 15.4+, Firefox 121+).
 - **Требуется React 19:** Компонент вызывает `useFormStatus` из `react-dom`, которого нет в React 18.

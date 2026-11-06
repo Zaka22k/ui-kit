@@ -7,7 +7,7 @@
     background-color var(--button-duration) var(--button-easing),
     opacity var(--button-duration) var(--button-easing);
 
-  &:has(.root:disabled) {
+  &.inactive {
     opacity: 0.6;
   }
 
@@ -15,15 +15,15 @@
   &.destructive {
     --button-tint: var(--fill-tertiary);
 
-    &:has(.root:hover:not(:disabled)) {
+    &:has(.root:hover):not(.inactive) {
       --button-tint: var(--fill-secondary);
     }
 
-    &:has(.root:active:not(:disabled)) {
+    &:has(.root:active):not(.inactive) {
       --button-tint: var(--fill-primary);
     }
 
-    &:has(.root:disabled) {
+    &.inactive {
       --button-tint: var(--fill-quaternary);
     }
   }
@@ -34,7 +34,7 @@
     --fg-specular-opacity: 0.85;
     --fg-glow-color: var(--text-selected);
 
-    &:has(.root:hover:not(:disabled)) {
+    &:has(.root:hover):not(.inactive) {
       --button-tint: color-mix(
         in srgb,
         color-mix(in srgb, var(--control-accent) 90%, white) 70%,
@@ -42,7 +42,7 @@
       );
     }
 
-    &:has(.root:active:not(:disabled)) {
+    &:has(.root:active):not(.inactive) {
       --button-tint: color-mix(
         in srgb,
         var(--selected-content-bg) 75%,
@@ -50,7 +50,7 @@
       );
     }
 
-    &:has(.root:disabled) {
+    &.inactive {
       --button-tint: var(--fill-tertiary);
     }
   }
@@ -78,8 +78,13 @@
   transition: color var(--button-duration, 200ms)
     var(--button-easing, cubic-bezier(0.2, 0.8, 0.2, 1));
 
-  &:disabled {
+  /* Неактивна: disabled или идёт отправка формы (aria-busy). */
+  &.inactive {
     cursor: not-allowed;
+
+    &[aria-busy="true"] {
+      cursor: progress;
+    }
   }
 
   &:focus-visible {
@@ -94,11 +99,11 @@
   &.normal {
     color: var(--label-primary);
 
-    &:active:not(:disabled) {
+    &:active:not(.inactive) {
       color: var(--label-secondary);
     }
 
-    &:disabled {
+    &.inactive {
       color: var(--label-tertiary);
     }
   }
@@ -106,7 +111,7 @@
   &.primary {
     color: var(--text-selected);
 
-    &:disabled {
+    &.inactive {
       color: var(--label-tertiary);
     }
   }
@@ -114,7 +119,7 @@
   &.destructive {
     color: var(--system-red);
 
-    &:disabled {
+    &.inactive {
       color: var(--label-tertiary);
     }
   }

@@ -1,5 +1,6 @@
 export * from "./NavigationView";
 export { default as Button } from "./Button";
+export type { ButtonAppearance, ButtonProps } from "./Button";
 export * from "./Page";
 export { ComboBox } from "./ComboBox";
 export * from "./Modal";

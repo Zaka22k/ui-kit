@@ -1,14 +1,14 @@
 "use client";
 
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-} from "react";
-import type { ChangeEvent, ReactNode } from "react";
+import { forwardRef, useEffect, useLayoutEffect } from "react";
+import type { ChangeEvent } from "react";
 import { useFormStatus } from "react-dom";
+import { cx } from "../utils/cx";
+import {
+  hasLabel,
+  useForwardedInputRef,
+  useSyncDefaultChecked,
+} from "./shared";
 import { type ToggleBaseProps } from "./ToggleBaseProps";
 import styles from "./Toggles.module.css";
 
@@ -18,12 +18,6 @@ export type CheckboxProps = ToggleBaseProps & {
 
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
-
-const cx = (...parts: Array<string | false | null | undefined>): string =>
-  parts.filter(Boolean).join(" ");
-
-const hasLabel = (label: ReactNode): boolean =>
-  label !== undefined && label !== null && label !== false;
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   function Checkbox(
@@ -44,29 +38,13 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
     const { pending } = useFormStatus();
     const isDisabled = disabled || pending;
 
-    const inputRef = useRef<HTMLInputElement | null>(null);
-    const setRefs = useCallback(
-      (node: HTMLInputElement | null) => {
-        inputRef.current = node;
-        if (typeof forwardedRef === "function") forwardedRef(node);
-        else if (forwardedRef) forwardedRef.current = node;
-      },
-      [forwardedRef],
-    );
+    const { inputRef, setRefs } = useForwardedInputRef(forwardedRef);
 
     useIsomorphicLayoutEffect(() => {
       if (inputRef.current) inputRef.current.indeterminate = indeterminate;
     });
 
-    useEffect(() => {
-      if (
-        checked === undefined &&
-        defaultChecked !== undefined &&
-        inputRef.current
-      ) {
-        inputRef.current.checked = defaultChecked;
-      }
-    }, [checked, defaultChecked]);
+    useSyncDefaultChecked(inputRef, checked, defaultChecked);
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
       onChange?.(e);
