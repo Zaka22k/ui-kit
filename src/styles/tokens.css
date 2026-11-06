@@ -34,7 +34,7 @@
   /* VIBRANCY & MATERIALS */
   --material-blur: blur(15px) saturate(1.4);
   --fg-light-angle: -110deg;
-  --fg-edge-width: 10;
+  --fg-edge-width: 10px;
 }
 
 /* ───────────── Типография ───────────── */

@@ -13,5 +13,6 @@ export * from "./Theme";
 export * from "./MenuButton";
 export * from "./List";
 export { FrostedGlass } from "./FrostedGlass";
+export type { FrostedGlassOptions, FrostedGlassProps } from "./FrostedGlass";
 export * from "./SegmentedControl";
 export * from "./PersonPicture";
