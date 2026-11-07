@@ -1,150 +1,192 @@
-egmentedControl
+# SegmentedControl
 
-Универсальный компонент управления выбором. Объединяет в себе функциональность классического переключателя сегментов, навигационного таб-бара и списка фильтров (pills/chips).
-Поддерживает:
-•
-3 визуальных стиля: solid (форм-контрол), glass (навигация), pills (фильтры со скроллом).
-•
-2 режима выбора: Одиночный (радио) и Множественный (чекбоксы).
-•
-FrostedGlass: В режиме glass использует компонент матового стекла для фона и ползунка.
-•
-Адаптивность: Поддержка иконок, бейджей уведомлений, тултипов и автоматической ширины.
+Универсальный переключатель сегментов: форм-контрол в стиле macOS (`solid`), стеклянная панель навигации (`glass`) и прокручиваемый ряд фильтров-«пилюль» (`pills`). Работает в одиночном режиме (как группа радиокнопок) и во множественном (как набор кнопок-переключателей).
 
-Импорт
+## Параметры
 
-tsx
-import { SegmentedControl, Segment } from "./SegmentedControl";
-// Требует наличия компонента FrostedGlass в проекте
-Используйте код с осторожностью.
+### SegmentedControl
 
-API
+| Название параметра | Тип                                  | Описание                                                                                                                                                                                                       |
+| ------------------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `items`            | `readonly SegmentItem<T>[]`          | Сегменты данными. Если не передан, используйте `<Segment>` в `children`. Ключом служит `value`, поэтому значения должны быть уникальными.                                                                       |
+| `children`         | `ReactNode`                          | Сегменты в виде `<Segment>`. Используются, когда `items` не передан.                                                                                                                                           |
+| `value`            | `T`                                  | Выбранное значение в одиночном режиме (контролируемый режим).                                                                                                                                                  |
+| `defaultValue`     | `T`                                  | Начальное значение в одиночном режиме (неконтролируемый режим).                                                                                                                                                |
+| `onValueChange`    | `(val: T) => void`                   | Вызывается при выборе другого сегмента в одиночном режиме. Повторный клик по выбранному сегменту не вызывает его.                                                                                              |
+| `values`           | `T[]`                                | Выбранные значения во множественном режиме (контролируемый режим).                                                                                                                                             |
+| `defaultValues`    | `T[]`                                | Начальные значения во множественном режиме (неконтролируемый режим).                                                                                                                                           |
+| `onValuesChange`   | `(vals: T[]) => void`                | Вызывается при каждом переключении сегмента во множественном режиме и получает новый массив.                                                                                                                   |
+| `variant`          | `"solid" \| "glass" \| "pills"`      | Стиль отображения. По умолчанию `"solid"`.                                                                                                                                                                     |
+| `layout`           | `"inline" \| "stacked"`              | `"inline"` (по умолчанию) — иконка и текст в строку; `"stacked"` — иконка над текстом, высота `58px`.                                                                                                          |
+| `appearance`       | `"neutral" \| "accent"`              | `"neutral"` (по умолчанию) — нейтральные цвета; `"accent"` — выбранный сегмент окрашивается в `--control-accent`.                                                                                               |
+| `fullWidth`        | `boolean`                            | Растягивает контрол на всю ширину контейнера. По умолчанию `false`.                                                                                                                                            |
+| `equalWidth`       | `boolean`                            | `true` (по умолчанию) — сегменты одной ширины; `false` — ширина по содержимому.                                                                                                                                |
+| `disabled`         | `boolean`                            | Блокирует весь контрол: сегменты получают нативный `disabled`, затемняются, группа — `aria-disabled="true"`. По умолчанию `false`.                                                                             |
+| `className`        | `string`                             | Пользовательский CSS-класс корневого элемента (в режиме `glass` это `FrostedGlass`).                                                                                                                           |
+| `style`            | `CSSProperties`                      | Инлайн-стили корневого элемента.                                                                                                                                                                               |
+| `ref`              | `Ref<HTMLDivElement>`                | Ссылка на корневой элемент.                                                                                                                                                                                    |
+| `...props`         | `HTMLAttributes<HTMLDivElement>`     | Остальные атрибуты корневого `<div>` (`aria-label`, `aria-labelledby`, `id`, `onKeyDown`, `data-*` и др.). `onChange` и `defaultValue` исключены. Атрибуты `role` и `aria-disabled` задаются компонентом.      |
 
-SegmentedControl Props
+Режим выбирается автоматически: если передан хотя бы один из `values`, `defaultValues`, `onValuesChange`, контрол работает во множественном режиме, иначе — в одиночном. Тип `T` (`string | number`) выводится из `items` или `value`.
 
-Свойство Тип По умолч. Описание
-variant
-'solid' | 'glass' | 'pills' 'solid' Стиль отображения (см. раздел Варианты).
-layout
-'inline' | 'stacked' 'inline' 'inline' — в строку (h=32/36px). 'stacked' — иконка над текстом (h=58px).
-appearance
-'neutral' | 'accent' 'neutral' 'neutral' — серый/белый. 'accent' — использует системный цвет (--control-accent).
-items
-SegmentItem[] undefined Массив данных для рендера. Если не передан, используйте children.
-value
-T undefined Контролируемое значение (Single mode).
-defaultValue
-T undefined Начальное значение (Single mode).
-values
-T[] undefined Контролируемый массив (Multiple mode).
-defaultValues
-T[] [] Начальный массив (Multiple mode). Передача этого пропа включает режим Multiple.
-fullWidth
-boolean false Растягивает контейнер на 100% ширины.
-equalWidth
-boolean true Делит ширину поровну между сегментами. false — ширина по контенту.
-disabled
-boolean false Блокирует весь компонент.
+### Segment и SegmentItem
 
-Интерфейс элемента (SegmentItem)
+Поля элемента `items` совпадают с пропсами `<Segment>`.
 
-Объект, передаваемый в массив items.
-typescript
-interface SegmentItem {
-value: string | number; // Уникальный ID
-label?: ReactNode; // Текст кнопки
-icon?: ReactNode; // Иконка (всегда видна или заменяется при activeIcon)
-activeIcon?: ReactNode; // Иконка только для активного состояния
-badge?: string | number;// Кружок с уведомлением (счетчик)
-disabled?: boolean; // Блокировка отдельной кнопки
-tooltip?: string; // Нативный title при наведении
+| Название параметра | Тип                                     | Описание                                                                                                                                                              |
+| ------------------ | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `value`            | `string \| number`                      | Уникальный идентификатор сегмента. Обязателен.                                                                                                                        |
+| `label`            | `ReactNode`                             | Текст сегмента. Значение `0` отображается.                                                                                                                            |
+| `children`         | `ReactNode`                             | Содержимое сегмента вместо `label` (только у `<Segment>`). Если передано, `label` игнорируется.                                                                       |
+| `icon`             | `ReactNode`                             | Иконка перед текстом (в `stacked` — над текстом).                                                                                                                     |
+| `activeIcon`       | `ReactNode`                             | Иконка, которая заменяет `icon`, пока сегмент выбран.                                                                                                                 |
+| `disabled`         | `boolean`                               | Блокирует только этот сегмент.                                                                                                                                        |
+| `tooltip`          | `string`                                | Нативная подсказка (`title`). Для сегмента без текста также служит доступным именем.                                                                                  |
+| `aria-label`       | `string`                                | Доступное имя. Обязательно для сегмента без текста, если не задан `tooltip`.                                                                                          |
+| `...props`         | `HTMLAttributes<HTMLButtonElement>`     | Остальные атрибуты `<button>` (только у `<Segment>`; `onClick` исключён). Передаются в конец тега, поэтому могут переопределить `tabIndex`, `role` и другие.          |
+
+## Быстрый старт
+
+```tsx
+import { SegmentedControl } from "@ui-kit/components";
+
+export default function App() {
+  return (
+    <SegmentedControl
+      aria-label="Вид отображения"
+      defaultValue="map"
+      items={[
+        { value: "map", label: "Карта" },
+        { value: "list", label: "Список" },
+      ]}
+      onValueChange={(view) => console.log(view)}
+    />
+  );
 }
-Используйте код с осторожностью.
+```
 
-Варианты отображения (Variant)
+Типы доступны из пакета: `SegmentedControlProps`, `SegmentProps`, `SegmentItem`, `SegmentValue`, `SegmentVariant`.
 
-Компонент кардинально меняет внешний вид в зависимости от пропа variant.
+## Варианты отображения
 
-1. solid (Классический)
+### 1. `solid` — форм-контрол
 
-Стандартный переключатель с серой подложкой (--fill-secondary) и белым плавающим ползунком с тенью.
-•
-Использование: Переключение видов (Карта/Список), масштаба, пола, тем оформления.
-•
-Особенности: Высота 32px.
-tsx
+Серая подложка (`--fill-secondary`) с рамкой и ползунком цвета `--control-surface`. Высота `32px` (`--ControlHeight`), `58px` при `layout="stacked"`. Подходит для переключения вида, масштаба, темы.
+
+```tsx
 <SegmentedControl
-variant="solid"
-defaultValue="map"
-items={[
-{ value: "map", label: "Карта" },
-{ value: "list", label: "Список" }
-]}
+  aria-label="Вид"
+  variant="solid"
+  defaultValue="map"
+  items={[
+    { value: "map", label: "Карта" },
+    { value: "list", label: "Список" },
+  ]}
 />
-Используйте код с осторожностью.
+```
 
-2. glass (Навигация / TabBar)
+### 2. `glass` — навигация
 
-Прозрачный фон, использующий эффект FrostedGlass. Ползунок — это слой более яркого стекла.
-•
-Использование: Нижняя навигация, переключение главных разделов поверх контента.
-•
-Особенности: Высота 36px (inline) или 58px (stacked). Нет теней, только размытие.
-tsx
+Фон и ползунок рисует `FrostedGlass` (подложка `--fill-tertiary`, ползунок `--fill-primary`). Высота `36px` при `inline` и `58px` при `stacked`. Подходит для таб-бара поверх контента.
+
+```tsx
 <SegmentedControl
-variant="glass"
-layout="stacked" // Вертикальный вид для табов
-defaultValue="home"
-items={[
-{ value: "home", label: "Главная", icon: <IconHome />, activeIcon: <IconHomeFilled /> },
-{ value: "chat", label: "Чаты", icon: <IconChat />, badge: 5 }
-]}
+  aria-label="Разделы"
+  variant="glass"
+  layout="stacked"
+  defaultValue="home"
+  items={[
+    { value: "home", label: "Главная", icon: <IconHome />, activeIcon: <IconHomeFilled /> },
+    { value: "chat", label: "Чаты", icon: <IconChat /> },
+  ]}
 />
-Используйте код с осторожностью.
+```
 
-3. pills (Фильтры / Чипсы)
+### 3. `pills` — фильтры
 
-Горизонтальный скролл-контейнер с раздельными кнопками.
-•
-Использование: Фильтры категорий (как в YouTube), теги.
-•
-Особенности: Ползунок превращается в фон активной кнопки. Неактивные кнопки имеют обводку. Автоматически включает скролл, если элементы не влезают. Рекомендуется использовать с equalWidth={false}.
-tsx
+Горизонтальный ряд отдельных «пилюль» с прокруткой, когда они не помещаются. Выбранная пилюля закрашивается цветом `--label-primary` (при `appearance="accent"` — `--control-accent`), неактивные имеют рамку. Для фильтров удобно `equalWidth={false}`.
+
+```tsx
 <SegmentedControl
-variant="pills"
-equalWidth={false}
-appearance="accent"
-items={[
-{ value: "all", label: "Все" },
-{ value: "games", label: "Игры" },
-{ value: "music", label: "Музыка" },
-// ... еще 10 элементов
-]}
+  aria-label="Категория"
+  variant="pills"
+  equalWidth={false}
+  appearance="accent"
+  defaultValue="all"
+  items={[
+    { value: "all", label: "Все" },
+    { value: "games", label: "Игры" },
+    { value: "music", label: "Музыка" },
+  ]}
 />
-Используйте код с осторожностью.
+```
 
-Режимы выбора
+## Примеры использования
 
-Одиночный выбор (Single)
+### 1. Контролируемый одиночный выбор
 
-Работает как <input type="radio">. Есть один плавающий ползунок, который перемещается между сегментами.
-Включается передачей value или defaultValue (не массивом).
+Выбор нельзя снять: клик по выбранному сегменту ничего не меняет и не вызывает `onValueChange`.
 
-Множественный выбор (Multiple)
+```tsx
+const [view, setView] = useState<"day" | "week" | "month">("week");
 
-Работает как группа <input type="checkbox">.
-•
-Визуально: Общего ползунка нет. При выборе каждый сегмент подсвечивается индивидуально (в режиме glass — своим кусочком стекла, в solid — фоном).
-•
-Активация: Передайте массив в values или defaultValues.
-tsx
-// Пример множественного выбора (Тулбар форматирования)
 <SegmentedControl
-defaultValues={["bold"]} // <-- Массив включает Multiple режим
-equalWidth={false}
-items={[
-{ value: "bold", icon: <IconBold /> },
-{ value: "italic", icon: <IconItalic /> },
-{ value: "underline", icon: <IconUnderline /> }
-]}
+  aria-label="Период"
+  value={view}
+  onValueChange={setView}
+  items={[
+    { value: "day", label: "День" },
+    { value: "week", label: "Неделя" },
+    { value: "month", label: "Месяц" },
+  ]}
+/>;
+```
+
+### 2. Множественный выбор
+
+Общего ползунка нет: каждый выбранный сегмент подсвечивается сам (в `solid` и `glass` — своим кусочком стекла `--fill-secondary`, в `pills` — заливкой). Режим включается передачей `values`, `defaultValues` или `onValuesChange`.
+
+```tsx
+<SegmentedControl
+  aria-label="Форматирование текста"
+  defaultValues={["bold"]}
+  equalWidth={false}
+  items={[
+    { value: "bold", icon: <IconBold />, tooltip: "Жирный" },
+    { value: "italic", icon: <IconItalic />, tooltip: "Курсив" },
+    { value: "underline", icon: <IconUnderline />, tooltip: "Подчёркнутый" },
+  ]}
 />
+```
+
+### 3. Сегменты через `children`
+
+`<Segment>` можно использовать только внутри `SegmentedControl`, иначе будет выброшена ошибка. Через `children` удобно задавать свою разметку и дополнительные атрибуты.
+
+```tsx
+import { SegmentedControl, Segment } from "@ui-kit/components";
+
+<SegmentedControl aria-label="Сортировка" defaultValue="new">
+  <Segment value="new" label="Новые" />
+  <Segment value="top" disabled>
+    Лучшие
+  </Segment>
+</SegmentedControl>;
+```
+
+### 4. Доступность и клавиатура
+
+- **Одиночный режим** — `role="radiogroup"`, сегменты — `role="radio"` с `aria-checked`. В порядок табуляции попадает только выбранный сегмент (или первый доступный, если выбора нет). Стрелки переносят фокус и сразу меняют выбор, `Home` и `End` переходят к первому и последнему доступному сегменту, в RTL горизонтальные стрелки меняются местами.
+- **Множественный режим** — `role="group"`, сегменты — кнопки с `aria-pressed`, в табуляции участвуют все, переключаются клавишами `Space` и `Enter`.
+- Задавайте группе имя через `aria-label` или `aria-labelledby`.
+- Сегмент без текста получает имя из `aria-label` или `tooltip`; без них скринридер прочитает просто «кнопка».
+
+## Ограничения
+
+- **Требуется `FrostedGlass` и глобальные токены:** вариант `glass` и выбранные сегменты множественного режима используют `FrostedGlass`; размеры берутся из `--ControlHeight` и `--CircularCornerRadius`, цвета — из токенов темы.
+- **`pills` выходит за границы родителя:** вариант использует `margin: 0 -20px`, `padding: 4px 20px` и ширину `calc(100% + 40px)`, чтобы прокрутка доходила до краёв. Учитывайте это в контейнерах с `overflow: hidden`. С `fullWidth` остаётся строка `flex` с прокруткой.
+- **Фиксированная высота:** `inline` — `32px` (`solid`) или `36px` (`glass`), `stacked` — `58px`, пилюля — `32px`. Высоту задаёт только вариант и раскладка.
+- **Нет снятия выбора в одиночном режиме:** для необязательного выбора используйте множественный режим.
+- **`onClick` у `<Segment>` недоступен:** реагируйте на выбор через `onValueChange` и `onValuesChange`.
+- **Ползунок — только в одиночном режиме:** положение считается по `offsetLeft` и `offsetWidth` выбранной кнопки и пересчитывается при изменении размеров и содержимого.
+- **Анимации:** при `prefers-reduced-motion: reduce` переходы ползунка и сегментов отключаются.

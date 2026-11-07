@@ -15,8 +15,7 @@
   --bg-color: var(--fill-secondary);
   --thumb-bg: var(--control-surface);
   --thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  --text-color: var(--text-primary);
-  --text-selected: var(--text-primary);
+  --sc-selected-color: var(--text-primary);
 
   position: relative;
   isolation: isolate;
@@ -74,20 +73,36 @@
   display: none;
 }
 
+.pills {
+  /* Text on the filled (selected) pill. / Текст на закрашенной (выбранной) пилюле. */
+  --sc-pill-on: light-dark(#ffffff, #000000);
+}
+
 .pills .segment {
   flex-shrink: 0;
   height: 32px;
   padding: 0 16px;
   border-radius: 99px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  background-color: var(--control-surface, #fff);
-  color: var(--text-selected);
+  border: 1px solid var(--separator);
+  background-color: var(--control-surface);
+  color: var(--text-primary);
   transition: all 0.2s ease;
 }
 .pills .selected {
   border-color: transparent;
-  color: var(--text-selected);
+  background-color: transparent;
+  color: var(--sc-pill-on);
   z-index: 2;
+}
+.pills.accent .selected {
+  color: var(--text-selected);
+}
+/* Multiple mode has no thumb: the selected pill paints itself. / В множественном режиме ползунка нет: выбранная пилюля закрашивается сама. */
+.pills.multiple .selected {
+  background-color: var(--label-primary);
+}
+.pills.multiple.accent .selected {
+  background-color: var(--control-accent);
 }
 .pills .thumbTrack {
   top: 4px;
@@ -95,7 +110,7 @@
   border-radius: 99px;
 }
 .pills .thumbContent {
-  background-color: #000;
+  background-color: var(--label-primary);
   border-radius: 99px;
 }
 .pills.accent .thumbContent {
@@ -110,6 +125,10 @@
 .fullWidth {
   display: grid;
   width: 100%;
+}
+.pills.fullWidth {
+  display: flex;
+  width: calc(100% + 40px);
 }
 
 .stacked {
@@ -156,7 +175,7 @@
 }
 
 .accent {
-  --text-selected: var(--control-accent);
+  --sc-selected-color: var(--control-accent);
 }
 
 /* === Сегмент (Кнопка) === */
@@ -187,9 +206,10 @@
   flex-direction: column;
 }
 .selected {
-  color: var(--text-selected);
+  color: var(--sc-selected-color);
 }
-.disabled {
+.disabled,
+.rootDisabled .segment {
   opacity: 0.38;
   cursor: not-allowed;
   pointer-events: none;
@@ -198,4 +218,33 @@
 .iconWrap {
   position: relative;
   display: inline-flex;
+}
+
+/* Multiple mode: a cell holds the button and its own glass piece. / Множественный режим: ячейка держит кнопку и свой кусочек стекла. */
+.cell {
+  position: relative;
+  display: flex;
+  border-radius: var(--sc-thumb-radius);
+}
+.cell > .segment {
+  flex: 1;
+}
+.cellGlass {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thumbTrack,
+  .thumbContent,
+  .segment {
+    transition: none;
+  }
+
+  .thumbMoving .thumbContent {
+    transform: none;
+  }
 }

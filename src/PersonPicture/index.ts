@@ -1,1 +1,2 @@
-export { PersonPicture, type ContactData } from "./PersonPicture";
+export { PersonPicture } from "./PersonPicture";
+export type { ContactData, PersonPictureProps } from "./PersonPicture";

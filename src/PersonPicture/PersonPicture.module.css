@@ -112,6 +112,7 @@
 
 .initials {
   font-size: calc(var(--pp-size) * 0.38);
+  font-weight: 600;
   line-height: 1;
   color: var(--label-primary);
   letter-spacing: -0.02em;
@@ -164,4 +165,23 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (forced-colors: active) {
+  .personPicture:focus-visible {
+    box-shadow: none;
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .avatar {
+    border-color: ButtonText;
+  }
+
+  .badge {
+    border-color: Canvas;
+    background-color: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
 }

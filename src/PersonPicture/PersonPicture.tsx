@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useId, useMemo, useState } from "react";
 import styles from "./PersonPicture.module.css";
 
 export interface ContactData {
@@ -28,6 +28,8 @@ export interface PersonPictureProps extends React.HTMLAttributes<HTMLDivElement>
   /** Число или текст бейджа уведомлений в углу аватара */
   badgeNumber?: number;
   badgeText?: string;
+  /** Accessible text of the badge, e.g. "3 непрочитанных". By default the badge value itself is used. */
+  badgeLabel?: string;
   /** Отображать текстовую подпись (имя и доп. инфо) справа от аватара */
   showLabel?: boolean;
   /** Переопределение основного текста подписи справа (по умолчанию берется имя или email/телефон) */
@@ -38,7 +40,12 @@ export interface PersonPictureProps extends React.HTMLAttributes<HTMLDivElement>
   interactive?: boolean;
   /** Отключает интерактивность (состояние disabled) */
   disabled?: boolean;
+  /** Ref корневого элемента */
+  ref?: React.Ref<HTMLDivElement>;
 }
+
+/* Works on code points, so emoji and other astral characters are not cut in half. */
+const chars = (value: string): string[] => Array.from(value);
 
 /**
  * Извлекает инициалы из полного имени (например, "Betsy Sherman" -> "BS")
@@ -48,9 +55,11 @@ function getInitialsFromName(name?: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "";
   if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
+    return chars(parts[0]).slice(0, 2).join("").toUpperCase();
   }
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return (
+    chars(parts[0])[0] + chars(parts[parts.length - 1])[0]
+  ).toUpperCase();
 }
 
 export const PersonPicture: React.FC<PersonPictureProps> = ({
@@ -62,6 +71,7 @@ export const PersonPicture: React.FC<PersonPictureProps> = ({
   size = 48,
   badgeNumber,
   badgeText,
+  badgeLabel,
   showLabel = false,
   label,
   secondaryLabel,
@@ -70,11 +80,13 @@ export const PersonPicture: React.FC<PersonPictureProps> = ({
   onClick,
   onKeyDown,
   tabIndex,
+  ref,
   className = "",
   style,
   ...rest
 }) => {
-  const [imgError, setImgError] = useState(false);
+  const [failedSrc, setFailedSrc] = useState<string | undefined>();
+  const baseId = useId();
 
   // 1. Определение URL изображения по приоритетам WinUI
   const resolvedImageSrc = useMemo(() => {
@@ -95,10 +107,6 @@ export const PersonPicture: React.FC<PersonPictureProps> = ({
     );
   }, [profilePicture, contact, preferSmallImage]);
 
-  useEffect(() => {
-    setImgError(false);
-  }, [resolvedImageSrc]);
-
   // 2. Определение полного имени
   const resolvedName = useMemo(() => {
     if (displayName) return displayName;
@@ -109,12 +117,12 @@ export const PersonPicture: React.FC<PersonPictureProps> = ({
 
   // 3. Определение текста/инициалов
   const resolvedInitials = useMemo(() => {
-    if (initials) return initials.slice(0, 3).toUpperCase();
+    if (initials) return chars(initials).slice(0, 3).join("").toUpperCase();
     const fromName = getInitialsFromName(resolvedName);
     if (fromName) return fromName;
 
-    if (contact?.email) return contact.email[0].toUpperCase();
-    if (contact?.phone) return contact.phone.slice(-2);
+    if (contact?.email) return chars(contact.email)[0].toUpperCase();
+    if (contact?.phone) return chars(contact.phone).slice(-2).join("");
 
     return "";
   }, [initials, resolvedName, contact]);
@@ -136,27 +144,65 @@ export const PersonPicture: React.FC<PersonPictureProps> = ({
 
   const hasLabelBlock = Boolean(primaryText || secondaryText);
 
-  // 5. Логика интерактивности (включается явно через interactive или автоматически при наличии onClick)
+  // 5. Интерактивность: стили включаются через interactive или onClick, а role="button" и фокус — только при onClick
   const isInteractive = Boolean((interactive ?? Boolean(onClick)) && !disabled);
+  const isActionable = isInteractive && Boolean(onClick);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (disabled) return;
     onKeyDown?.(e);
-    if (isInteractive && onClick && (e.key === "Enter" || e.key === " ")) {
+    if (
+      isActionable &&
+      !e.defaultPrevented &&
+      e.target === e.currentTarget &&
+      (e.key === "Enter" || e.key === " ")
+    ) {
       e.preventDefault();
-      onClick(e as unknown as React.MouseEvent<HTMLDivElement>);
+      // A real click: onClick gets a genuine MouseEvent. / Настоящий клик: onClick получает MouseEvent.
+      e.currentTarget.click();
     }
   };
 
-  const ariaLabel =
+  const nameFallback =
     resolvedName ||
     contact?.email ||
     contact?.phone ||
     initials ||
     "Фотография пользователя";
 
-  const showImage = Boolean(resolvedImageSrc && !imgError);
-  const badgeContent = badgeNumber !== undefined ? badgeNumber : badgeText;
+  // 6. Бейдж лежит внутри role="img"/"button", поэтому его значение добавляется в доступное имя
+  const badgeContent =
+    badgeNumber !== undefined && badgeNumber !== 0
+      ? badgeNumber
+      : badgeNumber === undefined && badgeText
+        ? badgeText
+        : undefined;
+  const badgeSuffix =
+    badgeContent !== undefined ? (badgeLabel ?? String(badgeContent)) : undefined;
+
+  const nameId = `${baseId}-name`;
+  const primaryId = `${baseId}-primary`;
+  const secondaryId = `${baseId}-secondary`;
+  const badgeId = `${baseId}-badge`;
+
+  // With a visible label block the name is built from the visible text (WCAG 2.5.3).
+  // При видимой подписи имя собирается из видимого текста (WCAG 2.5.3).
+  const labelledBy = hasLabelBlock
+    ? [
+        primaryText ? primaryId : nameId,
+        secondaryText ? secondaryId : undefined,
+        badgeSuffix ? badgeId : undefined,
+      ]
+        .filter(Boolean)
+        .join(" ")
+    : undefined;
+  const ariaLabel = hasLabelBlock
+    ? undefined
+    : badgeSuffix
+      ? `${nameFallback}, ${badgeSuffix}`
+      : nameFallback;
+
+  const showImage = Boolean(resolvedImageSrc && failedSrc !== resolvedImageSrc);
 
   const rootClassName = [
     styles.personPicture,
@@ -177,10 +223,12 @@ export const PersonPicture: React.FC<PersonPictureProps> = ({
           ...style,
         } as React.CSSProperties
       }
-      role={isInteractive ? "button" : hasLabelBlock ? "group" : "img"}
-      tabIndex={isInteractive ? (tabIndex ?? 0) : tabIndex}
+      ref={ref}
+      role={isActionable ? "button" : hasLabelBlock ? "group" : "img"}
+      tabIndex={isActionable ? (tabIndex ?? 0) : tabIndex}
       aria-disabled={disabled || undefined}
       aria-label={ariaLabel}
+      aria-labelledby={labelledBy}
       title={!hasLabelBlock ? ariaLabel : undefined}
       onClick={!disabled ? onClick : undefined}
       onKeyDown={handleKeyDown}
@@ -191,13 +239,13 @@ export const PersonPicture: React.FC<PersonPictureProps> = ({
           {showImage ? (
             <img
               src={resolvedImageSrc}
-              alt={ariaLabel}
+              alt=""
               className={styles.image}
-              onError={() => setImgError(true)}
+              onError={() => setFailedSrc(resolvedImageSrc)}
               draggable={false}
             />
           ) : resolvedInitials ? (
-            <span className={`${styles.initials} BodyStrongTextBlockStyle`}>
+            <span className={styles.initials}>
               {resolvedInitials}
             </span>
           ) : (
@@ -221,15 +269,29 @@ export const PersonPicture: React.FC<PersonPictureProps> = ({
 
       {hasLabelBlock && (
         <div className={styles.labelGroup}>
+          {!primaryText && (
+            <span id={nameId} hidden>
+              {nameFallback}
+            </span>
+          )}
+          {badgeSuffix && (
+            <span id={badgeId} hidden>
+              {badgeSuffix}
+            </span>
+          )}
           {primaryText && (
             <span
+              id={primaryId}
               className={`${styles.primaryLabel} BodyTextBlockStyle BodyStrongTextBlockStyle`}
             >
               {primaryText}
             </span>
           )}
           {secondaryText && (
-            <span className={`${styles.secondaryLabel} CaptionTextBlockStyle`}>
+            <span
+              id={secondaryId}
+              className={`${styles.secondaryLabel} CaptionTextBlockStyle`}
+            >
               {secondaryText}
             </span>
           )}
