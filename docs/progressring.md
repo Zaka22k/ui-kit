@@ -58,7 +58,7 @@ export default function App() {
 
 ### 2. Настройка размера, толщины и цвета
 
-Дуга индикатора использует `currentColor` (по умолчанию токен `--TextFillColorSecondaryBrush`), поэтому цвет линии легко переопределить через инлайн-стиль `color` или CSS-класс. Фоновая дорожка в определённом режиме всегда использует токен `--TextFillColorTertiaryBrush`.
+Дуга индикатора использует `currentColor` (по умолчанию `var(--label-secondary)`), поэтому цвет линии легко переопределить через инлайн-стиль `color` или CSS-класс. Фоновая дорожка в определённом режиме всегда рисуется токеном `--label-tertiary` с непрозрачностью `0.2`.
 
 ```tsx
 <ProgressRing loading size={16} strokeWidth={3} aria-label="Мини-индикатор" />
@@ -67,7 +67,7 @@ export default function App() {
   loading
   size={48}
   strokeWidth={2}
-  style={{ color: "var(--AccentFillColorDefaultBrush)" }}
+  style={{ color: "var(--control-accent)" }}
   aria-label="Акцентный индикатор"
 />
 ```
@@ -114,5 +114,5 @@ const [progress, setProgress] = useState(0);
 - **По умолчанию невидим:** Без передачи пропа `loading={true}` компонент `<ProgressRing />` рендерится полностью прозрачным (`opacity: 0`) и со скрытой доступностью (`aria-hidden="true"`).
 - **Занимает место в скрытом состоянии:** При `loading={false}` элемент `<svg>` остаётся в DOM и резервирует свои габариты `size × size`.
 - **Переопределение системных атрибутов через `...props`:** Так как `{...props}` разворачивается в самом конце тега `<svg>`, передача в пропсы `width`, `height`, `viewBox`, `role` или `aria-hidden` перезапишет вычисленные внутри компонента значения.
-- **Нет отдельного пропа для цвета:** Цвет активной дуги задаётся через CSS-свойство `color` в `style` или `className`, а цвет подложки (`track`) жёстко привязан к CSS-токену `--TextFillColorTertiaryBrush`.
+- **Нет отдельного пропа для цвета:** Цвет активной дуги задаётся через CSS-свойство `color` в `style` или `className`, а цвет подложки (`track`) жёстко привязан к токену `--label-tertiary` (с непрозрачностью `0.2`).
 - **Отсутствие подписи по умолчанию:** Для доступности при `loading={true}` необходимо явно передавать `aria-label` или `aria-labelledby` (если индикатор не декоративный).
