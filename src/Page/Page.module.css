@@ -58,8 +58,32 @@
   background: linear-gradient(to bottom, transparent 0%, var(--window-bg) 100%);
 }
 
+/* Заголовок страницы — h1: сбрасываем вид заголовка по умолчанию, размер задаёт SubtitleTextBlockStyle. */
+.pageTitle {
+  margin: 0;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
 .pageBody {
   padding: 8px var(--page-padding) 12px;
+}
+
+/* Фокус и якоря не уходят под прилипшую шапку (и под прилипшую шапку таблицы). */
+.pageBody
+  :is(
+    a[href],
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [tabindex],
+    [id]
+  ) {
+  scroll-margin-top: calc(
+    var(--page-header-height) + var(--page-stuck-extra) + 8px
+  );
 }
 
 .pageBodyAfterHero {

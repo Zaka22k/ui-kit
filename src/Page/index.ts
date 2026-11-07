@@ -1,2 +1,3 @@
-export { default as Page } from "./Page.tsx";
-export * from "./Toolbar.tsx";
+export { default as Page } from "./Page";
+export type { PageProps } from "./Page";
+export * from "./Toolbar";

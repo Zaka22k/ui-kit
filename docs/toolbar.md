@@ -12,8 +12,9 @@
 | `title`            | `ReactNode`                                                | Заголовок панели инструментов (рендерится внутри левой зоны сразу после `leading`).                         |
 | `center`           | `ReactNode`                                                | Центральная зона для основных групп частых действий. Центрируется в доступном пространстве.                 |
 | `trailing`         | `ReactNode`                                                | Правая зона для поиска, второстепенных кнопок и главного действия страницы (всегда прижата к правому краю). |
-| `className`        | `string`                                                   | Пользовательский CSS-класс для корневого элемента `<header role="toolbar">`.                                |
-| `...rest`          | `Omit<HTMLAttributes<HTMLElement>, "title" \| "children">` | Остальные нативные атрибуты `<header>` (`style`, `id`, `aria-label`, `data-*` и др.).                       |
+| `className`        | `string`                                                   | Пользовательский CSS-класс для корневого элемента `<header>`.                                               |
+| `ref`              | `Ref<HTMLElement>`                                         | Ссылка на корневой `<header>`.                                                                              |
+| `...rest`          | `Omit<HTMLAttributes<HTMLElement>, "title" \| "children">` | Остальные нативные атрибуты `<header>` (`style`, `id`, `aria-label`, `role`, `data-*` и др.). Роль `toolbar` не задана; если нужна, передайте `role="toolbar"` и `aria-label` сами (клавиатурную навигацию стрелками при этом нужно реализовать самостоятельно).                       |
 
 ### 2. Свойства `ToolbarGroup` (`ToolbarGroupProps`)
 
@@ -22,15 +23,16 @@
 | `children`         | `ReactNode`                                        | Дочерние элементы группы (`ToolbarButton`, `ToolbarDivider`, `MenuButton` с `appearance="plain"`).            |
 | `height`           | `number`                                           | Высота стеклянной капсулы в пикселях. По умолчанию `36` (`TOOLBAR_GROUP_HEIGHT`).                             |
 | `width`            | `number \| string`                                 | Ширина стеклянной капсулы. По умолчанию `"auto"`.                                                             |
-| `className`        | `string`                                           | Пользовательский CSS-класс для обёртки `LiquidGlass` (`role="group"`).                                        |
-| `style`            | `CSSProperties`                                    | Инлайн-стили для `LiquidGlass` (накладываются поверх базового тона `backgroundColor: "var(--toolbar-tint)"`). |
-| `...rest`          | `Omit<HTMLAttributes<HTMLDivElement>, "children">` | Остальные атрибуты `<div>`, пробрасываемые на `LiquidGlass`.                                                  |
+| `ref`              | `Ref<HTMLDivElement>`                              | Ссылка на корневой элемент группы.                                                                            |
+| `className`        | `string`                                           | Пользовательский CSS-класс для обёртки `FrostedGlass` (`role="group"`).                                        |
+| `style`            | `CSSProperties`                                    | Инлайн-стили для `FrostedGlass` (накладываются поверх базового тона `backgroundColor: "var(--toolbar-tint)"`). |
+| `...rest`          | `Omit<HTMLAttributes<HTMLDivElement>, "children">` | Остальные атрибуты `<div>`, пробрасываемые на `FrostedGlass`. Передавайте `aria-label` или `aria-labelledby`: у `role="group"` должно быть имя, иначе скринридер читает просто «группа».                                                  |
 
 ### 3. Свойства `ToolbarButton` (`ToolbarButtonProps`)
 
 | Название параметра | Тип                                       | Описание                                                                                                                          |
 | ------------------ | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `icon`             | `ReactNode`                               | Иконка кнопки (отображается перед `children`). Если кнопка содержит только иконку без текста, обязательно передайте `aria-label`. |
+| `icon`             | `ReactNode`                               | Иконка кнопки (отображается перед `children`). Если кнопка содержит только иконку без текста, TypeScript требует `aria-label` или `aria-labelledby`. |
 | `children`         | `ReactNode`                               | Текстовая подпись кнопки.                                                                                                         |
 | `type`             | `"button" \| "submit" \| "reset"`         | Нативный тип кнопки. По умолчанию `"button"`.                                                                                     |
 | `className`        | `string`                                  | Пользовательский CSS-класс для элемента `<button>`.                                                                               |
@@ -41,7 +43,7 @@
 
 | Компонент / Параметр         | Тип       | Описание                                                                                                                                                                                  |
 | ---------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ToolbarSpacer` (`flexible`) | `boolean` | Пробел между элементами тулбара (`aria-hidden="true"`). При `false` (по умолчанию) создаёт фиксированный отступ `8px`, при `true` — растягивается на всё свободное место (`flex: 1 1 0`). |
+| `ToolbarSpacer` (`flexible`) | `boolean` | Пробел между элементами тулбара (`aria-hidden="true"`). При `false` (по умолчанию) имеет ширину `8px`, а с учётом зазора `12px` по обе стороны (`gap` зоны) расстояние между соседями получается `32px`. При `true` — растягивается на всё свободное место (`flex: 1 1 0`). |
 | `ToolbarDivider`             | —         | Вертикальный разделитель `1×16px` (`role="separator"`, `aria-orientation="vertical"`) для разделения кнопок внутри `ToolbarGroup`. Не принимает параметров.                               |
 
 ## Быстрый старт
@@ -81,7 +83,7 @@ export default function AppHeader() {
 ```tsx
 <Page
   title="Файлы"
-  showBackButton
+  onBack={goBack}
   toolbar={{
     center: (
       <ToolbarGroup>
@@ -107,7 +109,7 @@ export default function AppHeader() {
 
 ### 2. Привязка кнопок тулбара к форме на странице (`form` и `formAction`)
 
-Когда шапка рендерится отдельно от `<form>` (например, через портал в `Page`), используйте атрибут `form={formId}` и `type="submit"` / `type="reset"`, чтобы управлять формой из тулбара.
+Шапка и форма — соседние элементы страницы, поэтому кнопка тулбара оказывается вне `<form>`. Используйте атрибут `form={formId}` и `type="submit"` / `type="reset"`, чтобы управлять формой из тулбара.
 
 ```tsx
 const formId = "article-edit-form";
@@ -147,7 +149,7 @@ const formId = "article-edit-form";
 
 ### 3. Разделение групп с помощью `ToolbarSpacer`
 
-Используйте `ToolbarSpacer` для добавления фиксированного (`8px`) или гибкого (`flexible`) расстояния между группами элементов внутри одной зоны.
+Используйте `ToolbarSpacer` для добавления фиксированного (ширина `8px`, вместе с зазорами зоны `32px`) или гибкого (`flexible`) расстояния между группами элементов внутри одной зоны.
 
 ```tsx
 <Toolbar
@@ -169,9 +171,36 @@ const formId = "article-edit-form";
 />
 ```
 
+### 4. Кнопки-переключатели и состояния
+
+`ToolbarButton` реагирует на наведение (`--fill-secondary`) и нажатие (`--fill-primary`). Включённое состояние показывается стилем для `aria-pressed="true"` (или `aria-current="true"`).
+
+```tsx
+<ToolbarGroup aria-label="Форматирование">
+  <ToolbarButton
+    icon={<BoldIcon />}
+    aria-label="Жирный"
+    aria-pressed={bold}
+    onClick={() => setBold(!bold)}
+  />
+  <ToolbarButton
+    icon={<ItalicIcon />}
+    aria-label="Курсив"
+    aria-pressed={italic}
+    onClick={() => setItalic(!italic)}
+  />
+</ToolbarGroup>
+```
+
+### 5. Раскладка зон
+
+Зоны `Toolbar` лежат в одной строке с зазором `12px`. `leading` и `title` не сжимаются (сжимается только заголовок с многоточием), `center` занимает всё оставшееся место и центрирует содержимое между левой и правой зонами, `trailing` всегда прижат к правому краю и не сжимается. Высота кнопки `ToolbarButton` равна высоте группы минус `4px`, минимальная ширина `32px`. Константа `TOOLBAR_GROUP_HEIGHT` (`36`) экспортируется из пакета.
+
 ## Ограничения
 
 - **Запрет на вложение стеклянных компонентов в `ToolbarGroup`:** Не помещайте `<Button>`, `<SearchField>` или `<MenuButton appearance="glass">` внутрь `<ToolbarGroup>`. Вложенный `backdrop-filter` не видит фон страницы сквозь родительское стекло и создаёт визуальные артефакты.
 - **Отсутствие авто-блокировки через `useFormStatus`:** В отличие от `Button`, компонент `ToolbarButton` не вызывает внутри себя `useFormStatus()`, поэтому при отправке формы состояние `disabled={isPending}` нужно передавать явно.
 - **Перезапись системного тона группы:** `ToolbarGroup` задаёт цвет стекла через инлайн-стиль `backgroundColor: "var(--toolbar-tint)"`. Если передать собственный `backgroundColor` в проп `style`, он перезапишет системный тон.
-- **Контроль доступности для кнопок-иконок:** В отличие от `Button`, тип `ToolbarButtonProps` не требует `aria-label` на уровне компиляции TypeScript, поэтому при передаче `icon` без `children` разработчик должен сам проследить за наличием `aria-label`.
+- **Кнопки-иконки требуют имя:** Тип `ToolbarButtonProps` разрешает `icon` без `children` только вместе с `aria-label` или `aria-labelledby`. Для кнопки с текстом имя не нужно.
+- **Узкие экраны:** Зоны не сворачиваются и не переносятся, поэтому широкая панель в `trailing` может выйти за пределы шапки.
+- **Высокая контрастность:** В режиме `forced-colors` у группы появляется рамка, а кнопки используют системные цвета (`ButtonText`, `Highlight`, `GrayText`).

@@ -19,6 +19,8 @@ export interface PageProps {
   onBack?: () => void;
   toolbar?: Pick<ToolbarProps, "leading" | "center" | "trailing">;
   transition?: PageTransitionSetting;
+  /** Accessible name of the back button. По умолчанию «Назад». */
+  backLabel?: string;
 }
 
 function findScrollParent(el: HTMLElement): HTMLElement | null {
@@ -56,6 +58,7 @@ const Page = ({
   onBack,
   toolbar,
   transition,
+  backLabel = "Назад",
 }: PageProps) => {
   usePageTransition(transition);
 
@@ -104,15 +107,44 @@ const Page = ({
       setHeroUnderHeader(false);
       return undefined;
     }
-    const observer = new IntersectionObserver(
-      ([entry]) => setHeroUnderHeader(entry.isIntersecting),
-      {
-        root: findScrollParent(el),
-        rootMargin: `-${header.offsetHeight}px 0px 0px 0px`,
-      },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+
+    /*
+     * The observer depends on the header height and on the scroll container, so it is rebuilt when the header
+     * is resized or the window changes (zoom, breakpoints, a new container).
+     * Наблюдатель зависит от высоты шапки и контейнера прокрутки, поэтому он пересоздаётся при изменении
+     * размера шапки и окна (масштаб, брейкпоинты, новый контейнер).
+     */
+    let observer: IntersectionObserver | null = null;
+    const connect = () => {
+      observer?.disconnect();
+      observer = new IntersectionObserver(
+        ([entry]) => setHeroUnderHeader(entry.isIntersecting),
+        {
+          root: findScrollParent(el),
+          rootMargin: `-${header.offsetHeight}px 0px 0px 0px`,
+        },
+      );
+      observer.observe(el);
+    };
+    connect();
+
+    let lastHeight = header.offsetHeight;
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(() => {
+            if (header.offsetHeight === lastHeight) return;
+            lastHeight = header.offsetHeight;
+            connect();
+          });
+    resizeObserver?.observe(header);
+    window.addEventListener("resize", connect);
+
+    return () => {
+      observer?.disconnect();
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", connect);
+    };
   }, [hasHero]);
 
   const leading = (Boolean(onBack) || Boolean(toolbar?.leading)) && (
@@ -120,7 +152,7 @@ const Page = ({
       {onBack && (
         <Button
           onClick={onBack}
-          aria-label="Назад"
+          aria-label={backLabel}
           icon={<ChevronLeftIcon />}
         />
       )}
@@ -142,7 +174,11 @@ const Page = ({
         >
           <Toolbar
             leading={leading || undefined}
-            title={<div className="SubtitleTextBlockStyle">{title}</div>}
+            title={
+              <h1 className={`${styles.pageTitle} SubtitleTextBlockStyle`}>
+                {title}
+              </h1>
+            }
             center={toolbar?.center}
             trailing={toolbar?.trailing}
           />

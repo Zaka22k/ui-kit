@@ -6,6 +6,7 @@ import type {
   CSSProperties,
   HTMLAttributes,
   ReactNode,
+  Ref,
 } from "react";
 import { FrostedGlass } from "../FrostedGlass";
 import styles from "./Toolbar.module.css";
@@ -25,6 +26,8 @@ export interface ToolbarProps extends Omit<
   center?: ReactNode;
 
   trailing?: ReactNode;
+
+  ref?: Ref<HTMLElement>;
 }
 
 export const Toolbar = ({
@@ -33,10 +36,11 @@ export const Toolbar = ({
   center,
   trailing,
   className,
+  ref,
   ...rest
 }: ToolbarProps) => (
   <header
-    role="toolbar"
+    ref={ref}
     className={[styles.toolbar, className].filter(Boolean).join(" ")}
     {...rest}
   >
@@ -60,6 +64,8 @@ export interface ToolbarGroupProps extends Omit<
   height?: number;
 
   width?: number | string;
+
+  ref?: Ref<HTMLDivElement>;
 }
 
 export const ToolbarGroup = ({
@@ -68,9 +74,11 @@ export const ToolbarGroup = ({
   width = "auto",
   className,
   style,
+  ref,
   ...rest
 }: ToolbarGroupProps) => (
   <FrostedGlass
+    ref={ref}
     role="group"
     interactive
     width={width}
@@ -94,9 +102,18 @@ export const ToolbarSpacer = ({ flexible = false }: ToolbarSpacerProps) => (
   />
 );
 
-export interface ToolbarButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  icon?: ReactNode;
-}
+/**
+ * A button with text, or an icon-only button that must have an accessible name.
+ * Кнопка с текстом или кнопка только с иконкой, у которой обязательно есть доступное имя.
+ */
+export type ToolbarButtonProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "children"
+> & { icon?: ReactNode } & (
+    | { children: ReactNode }
+    | { children?: never; icon: ReactNode; "aria-label": string }
+    | { children?: never; icon: ReactNode; "aria-labelledby": string }
+  );
 
 export const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>(
   function ToolbarButton(

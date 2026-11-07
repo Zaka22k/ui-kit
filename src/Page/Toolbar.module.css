@@ -72,6 +72,22 @@
   flex: none;
 }
 
+@media (hover: hover) {
+  .button:hover {
+    background: var(--fill-secondary);
+  }
+}
+
+.button:active {
+  background: var(--fill-primary);
+}
+
+/* Кнопка-переключатель во включённом состоянии. */
+.button[aria-pressed="true"],
+.button[aria-current="true"] {
+  background: var(--fill-primary);
+}
+
 .button:focus-visible {
   outline: 2px solid var(--keyboard-focus-indicator);
   outline-offset: -2px;
@@ -105,5 +121,32 @@
 @media (prefers-reduced-motion: reduce) {
   .button {
     transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .group {
+    border: 1px solid ButtonText;
+  }
+
+  .button {
+    color: ButtonText;
+  }
+
+  .button:disabled {
+    color: GrayText;
+    opacity: 1;
+  }
+
+  .button:hover,
+  .button[aria-pressed="true"],
+  .button[aria-current="true"] {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .divider {
+    background: ButtonText;
   }
 }
