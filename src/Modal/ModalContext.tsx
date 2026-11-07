@@ -65,6 +65,7 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
           errorMessage={options.errorMessage}
           width={options.width}
           closeOnBackdropClick={options.closeOnBackdropClick}
+          closeLabel={options.closeLabel}
           key={modalKey}
         >
           {options.content}

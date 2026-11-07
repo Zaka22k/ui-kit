@@ -12,6 +12,8 @@ import {
 import type { CSSProperties, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { FrostedGlass } from "../FrostedGlass";
+import { useIsomorphicLayoutEffect } from "../utils/useIsomorphicLayoutEffect";
+import { TOP_LAYER_ATTR } from "../utils/topLayer";
 import styles from "./Toast.module.css";
 
 /**
@@ -55,6 +57,12 @@ export interface ToastOptions {
   position?: ToastPosition;
   /** Show the close button. Default: true. / Показывать кнопку закрытия. По умолчанию true. */
   dismissible?: boolean;
+  /**
+   * Action button. A toast with an action does not close by itself unless `duration` is set explicitly,
+   * because a keyboard user could not reach the button in time.
+   * Кнопка действия. Тост с действием не закрывается сам, пока `duration` не задан явно: пользователь
+   * клавиатуры иначе не успел бы добраться до кнопки.
+   */
   action?: ToastAction;
   /** Called when the toast starts closing. / Вызывается, когда тост начинает закрываться. */
   onClose?: () => void;
@@ -83,6 +91,30 @@ export interface ToastApi {
   setPosition: (position: ToastPosition) => void;
 }
 
+/**
+ * Texts read by screen readers. Defaults are Russian.
+ * Тексты для скринридеров. По умолчанию русские.
+ */
+export interface ToastLabels {
+  /** Name of the notification region. / Имя области уведомлений. */
+  region?: string;
+  /** Name of the close button. / Имя кнопки закрытия. */
+  close?: string;
+  info?: string;
+  success?: string;
+  warning?: string;
+  error?: string;
+}
+
+const DEFAULT_LABELS: Required<ToastLabels> = {
+  region: "Уведомления",
+  close: "Закрыть",
+  info: "Информация",
+  success: "Успешно",
+  warning: "Предупреждение",
+  error: "Ошибка",
+};
+
 export interface ToastProviderProps {
   children?: ReactNode;
   /** Default position. Default: "top-right". / Позиция по умолчанию. По умолчанию "top-right". */
@@ -94,6 +126,8 @@ export interface ToastProviderProps {
    * Максимум видимых тостов на позицию. Самые старые закрываются. По умолчанию 5.
    */
   limit?: number;
+  /** Texts for screen readers. / Тексты для скринридеров. */
+  labels?: ToastLabels;
 }
 
 interface ToastRecord extends ToastOptions {
@@ -123,6 +157,31 @@ const POSITIONS: readonly ToastPosition[] = [
 const ToastContext = createContext<ToastApi | null>(null);
 
 /**
+ * Ids of the toasts that exceed the limit: the oldest ones of every position.
+ * Идентификаторы тостов сверх лимита: самые старые на каждой позиции.
+ */
+function overLimit(
+  list: readonly ToastRecord[],
+  defaultPosition: ToastPosition,
+  limit: number,
+): Set<string> {
+  const max = Math.max(1, limit);
+  const groups = new Map<ToastPosition, ToastRecord[]>();
+  for (const t of list) {
+    if (t.leaving) continue;
+    const p = t.position ?? defaultPosition;
+    groups.set(p, [...(groups.get(p) ?? []), t]);
+  }
+  const result = new Set<string>();
+  groups.forEach((items) => {
+    items.slice(0, Math.max(0, items.length - max)).forEach((t) => {
+      result.add(t.id);
+    });
+  });
+  return result;
+}
+
+/**
  * Global access to toasts. Must be used inside <ToastProvider>.
  * Глобальный доступ к уведомлениям. Работает только внутри <ToastProvider>.
  */
@@ -137,6 +196,7 @@ export function ToastProvider({
   position: positionProp = "top-right",
   duration = 5000,
   limit = 5,
+  labels,
 }: ToastProviderProps) {
   const [toasts, setToasts] = useState<ToastRecord[]>([]);
   // Источник правды — ref, state нужен только для перерисовки.
@@ -145,14 +205,29 @@ export function ToastProvider({
   const counter = useRef(0);
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState<ToastPosition>(positionProp);
+  const [lastPositionProp, setLastPositionProp] = useState(positionProp);
+  // A new `position` prop resets the position right away (no frame with the old one).
+  // Новый проп `position` сбрасывает позицию сразу (без кадра со старой).
+  if (lastPositionProp !== positionProp) {
+    setLastPositionProp(positionProp);
+    setPosition(positionProp);
+  }
+
+  const positionRef = useRef(position);
+  const limitRef = useRef(limit);
+  useIsomorphicLayoutEffect(() => {
+    positionRef.current = position;
+    limitRef.current = limit;
+  });
+
+  const mergedLabels = useMemo<Required<ToastLabels>>(
+    () => ({ ...DEFAULT_LABELS, ...labels }),
+    [labels],
+  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    setPosition(positionProp);
-  }, [positionProp]);
 
   useEffect(() => {
     const timers = removalTimers.current;
@@ -167,19 +242,14 @@ export function ToastProvider({
     setToasts(next);
   }, []);
 
-  const dismiss = useCallback(
-    (id?: string) => {
-      const fresh = toastsRef.current.filter(
-        (t) => !t.leaving && (id === undefined || t.id === id),
-      );
-      if (fresh.length === 0) return;
-      const ids = new Set(fresh.map((t) => t.id));
-      commit(
-        toastsRef.current.map((t) =>
-          ids.has(t.id) ? { ...t, leaving: true } : t,
-        ),
-      );
-      for (const t of fresh) {
+  /*
+   * Marks toasts as leaving, calls their onClose and schedules the removal. Returns the new list.
+   * Помечает тосты как закрывающиеся, вызывает их onClose и планирует удаление. Возвращает новый список.
+   */
+  const startLeaving = useCallback(
+    (current: ToastRecord[], ids: Set<string>): ToastRecord[] => {
+      for (const t of current) {
+        if (t.leaving || !ids.has(t.id)) continue;
         t.onClose?.();
         const timer = window.setTimeout(() => {
           removalTimers.current.delete(t.id);
@@ -187,8 +257,24 @@ export function ToastProvider({
         }, EXIT_DURATION);
         removalTimers.current.set(t.id, timer);
       }
+      return current.map((t) =>
+        !t.leaving && ids.has(t.id) ? { ...t, leaving: true } : t,
+      );
     },
     [commit],
+  );
+
+  const dismiss = useCallback(
+    (id?: string) => {
+      const ids = new Set(
+        toastsRef.current
+          .filter((t) => !t.leaving && (id === undefined || t.id === id))
+          .map((t) => t.id),
+      );
+      if (ids.size === 0) return;
+      commit(startLeaving(toastsRef.current, ids));
+    },
+    [commit, startLeaving],
   );
 
   const show = useCallback(
@@ -205,9 +291,8 @@ export function ToastProvider({
       }
 
       const existing = toastsRef.current.find((t) => t.id === id);
-      if (existing) {
-        commit(
-          toastsRef.current.map((t) =>
+      const next: ToastRecord[] = existing
+        ? toastsRef.current.map((t) =>
             t.id === id
               ? {
                   ...options,
@@ -216,17 +301,16 @@ export function ToastProvider({
                   leaving: false,
                 }
               : t,
-          ),
-        );
-      } else {
-        commit([
-          ...toastsRef.current,
-          { ...options, id, revision: 0, leaving: false },
-        ]);
-      }
+          )
+        : [...toastsRef.current, { ...options, id, revision: 0, leaving: false }];
+
+      // The limit is applied in the same commit, so an extra toast is never drawn.
+      // Лимит применяется в том же коммите, поэтому лишний тост не рисуется.
+      const over = overLimit(next, positionRef.current, limitRef.current);
+      commit(over.size > 0 ? startLeaving(next, over) : next);
       return id;
     },
-    [commit],
+    [commit, startLeaving],
   );
 
   const withVariant = useCallback(
@@ -236,21 +320,12 @@ export function ToastProvider({
     [show],
   );
 
-  // Лимит: на каждой позиции остаются только последние `limit` тостов.
+  // The limit or the position changed: close the extra toasts.
+  // Изменились лимит или позиция: закрываем лишние тосты.
   useEffect(() => {
-    const max = Math.max(1, limit);
-    const groups = new Map<ToastPosition, ToastRecord[]>();
-    for (const t of toasts) {
-      if (t.leaving) continue;
-      const p = t.position ?? position;
-      groups.set(p, [...(groups.get(p) ?? []), t]);
-    }
-    groups.forEach((list) => {
-      list
-        .slice(0, Math.max(0, list.length - max))
-        .forEach((t) => dismiss(t.id));
-    });
-  }, [toasts, position, limit, dismiss]);
+    const over = overLimit(toastsRef.current, position, limit);
+    if (over.size > 0) commit(startLeaving(toastsRef.current, over));
+  }, [position, limit, commit, startLeaving]);
 
   const api = useMemo<ToastApi>(
     () => ({
@@ -288,6 +363,7 @@ export function ToastProvider({
                 placement={p}
                 toasts={groups[p]}
                 defaultDuration={duration}
+                labels={mergedLabels}
                 onDismiss={dismiss}
               />
             ))}
@@ -302,29 +378,39 @@ interface ToastViewportProps {
   placement: ToastPosition;
   toasts: ToastRecord[];
   defaultDuration: number;
+  labels: Required<ToastLabels>;
   onDismiss: (id: string) => void;
 }
 
+/*
+ * The viewport is always mounted: screen readers announce additions only to a live region that already exists.
+ * Вьюпорт смонтирован всегда: скринридеры озвучивают добавления только в уже существующую live-область.
+ */
 function ToastViewport({
   placement,
   toasts,
   defaultDuration,
+  labels,
   onDismiss,
 }: ToastViewportProps) {
-  if (toasts.length === 0) return null;
   // Новые тосты ближе к краю экрана: сверху — выше, снизу — ниже.
   const items = placement.startsWith("top") ? [...toasts].reverse() : toasts;
+  const hasToasts = items.length > 0;
   return (
     <div
       className={`${styles.viewport} ${styles[placement]}`}
-      role="region"
-      aria-label="Уведомления"
+      {...{ [TOP_LAYER_ATTR]: "" }}
+      role={hasToasts ? "region" : undefined}
+      aria-label={hasToasts ? labels.region : undefined}
+      aria-live="polite"
+      aria-relevant="additions text"
     >
       {items.map((t) => (
         <ToastItem
           key={`${t.id}:${t.revision}`}
           toast={t}
           defaultDuration={defaultDuration}
+          labels={labels}
           onDismiss={onDismiss}
         />
       ))}
@@ -335,25 +421,38 @@ function ToastViewport({
 interface ToastItemProps {
   toast: ToastRecord;
   defaultDuration: number;
+  labels: Required<ToastLabels>;
   onDismiss: (id: string) => void;
 }
 
-function ToastItem({ toast, defaultDuration, onDismiss }: ToastItemProps) {
+function ToastItem({
+  toast,
+  defaultDuration,
+  labels,
+  onDismiss,
+}: ToastItemProps) {
   const {
     id,
     title,
     description,
     variant = "default",
-    dismissible = false,
+    dismissible = true,
     action,
     leaving,
   } = toast;
-  const duration = toast.duration ?? defaultDuration;
+  // A toast with an action stays until it is handled, unless the duration is set explicitly.
+  // Тост с действием остаётся, пока его не обработают, если длительность не задана явно.
+  const duration = toast.duration ?? (action ? 0 : defaultDuration);
 
   // Таймер с паузой: при наведении и фокусе оставшееся время запоминается.
   const timer = useRef<number | null>(null);
   const startedAt = useRef(0);
   const remaining = useRef(duration);
+
+  // Hover and focus are tracked separately: the timer runs only when neither holds the toast.
+  // Наведение и фокус учитываются отдельно: таймер идёт, только когда тост не удерживает ни то, ни другое.
+  const hovered = useRef(false);
+  const focused = useRef(false);
 
   const stop = useCallback(() => {
     if (timer.current === null) return;
@@ -383,14 +482,27 @@ function ToastItem({ toast, defaultDuration, onDismiss }: ToastItemProps) {
   return (
     <FrostedGlass
       className={leaving ? `${styles.toast} ${styles.leaving}` : styles.toast}
-      role={variant === "error" ? "alert" : "status"}
+      role={variant === "error" ? "alert" : undefined}
       width="min(380px, calc(100vw - 32px))"
       height="auto"
       style={TOAST_STYLE}
-      onMouseEnter={stop}
-      onMouseLeave={start}
-      onFocus={stop}
-      onBlur={start}
+      onMouseEnter={() => {
+        hovered.current = true;
+        stop();
+      }}
+      onMouseLeave={() => {
+        hovered.current = false;
+        if (!focused.current) start();
+      }}
+      onFocus={() => {
+        focused.current = true;
+        stop();
+      }}
+      onBlur={(e) => {
+        if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+        focused.current = false;
+        if (!hovered.current) start();
+      }}
     >
       <div className={styles.body}>
         {variant !== "default" && (
@@ -403,6 +515,9 @@ function ToastItem({ toast, defaultDuration, onDismiss }: ToastItemProps) {
         )}
 
         <div className={styles.content}>
+          {variant !== "default" && (
+            <span className={styles.srOnly}>{labels[variant]}: </span>
+          )}
           {title != null && <div className={styles.title}>{title}</div>}
           {description != null && (
             <div className={styles.description}>{description}</div>
@@ -425,7 +540,7 @@ function ToastItem({ toast, defaultDuration, onDismiss }: ToastItemProps) {
           <button
             type="button"
             className={styles.close}
-            aria-label="Закрыть"
+            aria-label={labels.close}
             onClick={() => onDismiss(id)}
           >
             <CloseIcon />

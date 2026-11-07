@@ -10,6 +10,7 @@ import type {
   KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import Button, { type ButtonAppearance } from "../Button/Button";
+import { TOP_LAYER_ATTR } from "../utils/topLayer";
 import styles from "./Modal.module.css";
 
 export interface ModalFormRenderProps {
@@ -39,6 +40,8 @@ export interface ModalProps {
   errorMessage?: ReactNode | ((error: unknown) => ReactNode);
   width?: number | string;
   closeOnBackdropClick?: boolean;
+  /** Accessible name of the close button. По умолчанию: «Закрыть модальное окно». */
+  closeLabel?: string;
 }
 
 const DEFAULT_ERROR_MESSAGE =
@@ -46,12 +49,57 @@ const DEFAULT_ERROR_MESSAGE =
 
 const FOCUSABLE_SELECTOR = [
   "a[href]",
+  "area[href]",
   "button:not([disabled])",
-  "input:not([disabled])",
+  'input:not([disabled]):not([type="hidden"])',
   "select:not([disabled])",
   "textarea:not([disabled])",
+  "summary",
+  "audio[controls]",
+  "video[controls]",
+  '[contenteditable]:not([contenteditable="false"])',
   '[tabindex]:not([tabindex="-1"])',
 ].join(", ");
+
+/**
+ * Fallback for the exit animation: if `animationend` never fires (hidden tab, animations switched off),
+ * the closed dialog is still removed, so it does not keep the scroll lock and the focus trap.
+ * Запасной выход для анимации закрытия: если `animationend` не пришёл (скрытая вкладка, отключённые
+ * анимации), закрытое окно всё равно убирается и не держит блокировку прокрутки и ловушку фокуса.
+ */
+const EXIT_FALLBACK_MS = 600;
+
+const SKIPPED_BODY_TAGS = new Set(["SCRIPT", "STYLE", "LINK", "NOSCRIPT"]);
+
+/*
+ * Scroll lock shared by every open dialog. The scrollbar width is compensated, so the page does not jump.
+ * Блокировка прокрутки, общая для всех открытых окон. Ширина полосы прокрутки компенсируется, страница не прыгает.
+ */
+let scrollLocks = 0;
+let savedBodyStyle: { overflow: string; paddingRight: string } | null = null;
+
+function lockBodyScroll(): () => void {
+  const body = document.body;
+  if (scrollLocks++ === 0) {
+    savedBodyStyle = {
+      overflow: body.style.overflow,
+      paddingRight: body.style.paddingRight,
+    };
+    const scrollbar =
+      window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbar > 0) {
+      body.style.paddingRight = `calc(${getComputedStyle(body).paddingRight} + ${scrollbar}px)`;
+    }
+    body.style.overflow = "hidden";
+  }
+  return () => {
+    if (--scrollLocks === 0 && savedBodyStyle) {
+      body.style.overflow = savedBodyStyle.overflow;
+      body.style.paddingRight = savedBodyStyle.paddingRight;
+      savedBodyStyle = null;
+    }
+  };
+}
 
 const NON_TEXT_INPUT_TYPES = new Set([
   "button",
@@ -91,6 +139,7 @@ export const Modal = ({
   errorMessage = DEFAULT_ERROR_MESSAGE,
   width = 480,
   closeOnBackdropClick = true,
+  closeLabel = "Закрыть модальное окно",
 }: ModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actionError, setActionError] = useState<{ error: unknown } | null>(
@@ -101,7 +150,10 @@ export const Modal = ({
   const submittingRef = useRef(false);
   const formId = useId();
   const titleId = useId();
+  const bodyId = useId();
 
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  const pressedOnBackdropRef = useRef(false);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const innerActionRef = useRef<(() => void | Promise<void>) | null>(null);
@@ -133,6 +185,12 @@ export const Modal = ({
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (isOpen || !shouldRender) return;
+    const timer = setTimeout(() => setShouldRender(false), EXIT_FALLBACK_MS);
+    return () => clearTimeout(timer);
+  }, [isOpen, shouldRender]);
+
   const handleAnimationEnd = (e: AnimationEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget && !isOpen) {
       setShouldRender(false);
@@ -152,10 +210,11 @@ export const Modal = ({
     submittingRef.current = true;
     setActionError(null);
 
+    let succeeded = false;
     try {
       setIsSubmitting(true);
       await targetAction();
-      onClose();
+      succeeded = true;
     } catch (error) {
       console.error("Ошибка при выполнении действия в модальном окне:", error);
       setActionError({ error });
@@ -164,6 +223,10 @@ export const Modal = ({
       submittingRef.current = false;
       setIsSubmitting(false);
     }
+
+    // Outside the try block: an error thrown by onClose is not an error of the action.
+    // Вне try: ошибка в onClose не считается ошибкой действия.
+    if (succeeded) onClose();
   };
 
   const handleKeyDown = useCallback(
@@ -184,6 +247,7 @@ export const Modal = ({
           dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
         ).filter(
           (el) =>
+            !el.matches(":disabled") &&
             el.offsetParent !== null &&
             getComputedStyle(el).visibility !== "hidden",
         );
@@ -221,12 +285,30 @@ export const Modal = ({
 
   useEffect(() => {
     if (!shouldRender) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return lockBodyScroll();
   }, [shouldRender]);
+
+  // The rest of the page becomes inert while the dialog is open (not only for Tab, but for screen readers too).
+  // Остальная страница становится inert, пока окно открыто (не только для Tab, но и для скринридеров).
+  useEffect(() => {
+    if (!shouldRender || !isOpen) return;
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+    const inerted: Element[] = [];
+    for (const el of Array.from(document.body.children)) {
+      if (
+        el === overlay ||
+        el.hasAttribute("inert") ||
+        el.hasAttribute(TOP_LAYER_ATTR) ||
+        SKIPPED_BODY_TAGS.has(el.tagName)
+      ) {
+        continue;
+      }
+      el.setAttribute("inert", "");
+      inerted.push(el);
+    }
+    return () => inerted.forEach((el) => el.removeAttribute("inert"));
+  }, [shouldRender, isOpen]);
 
   useEffect(() => {
     if (!shouldRender) return;
@@ -246,9 +328,18 @@ export const Modal = ({
   }, [shouldRender]);
   if (!shouldRender || typeof document === "undefined") return null;
 
+  // A click closes the dialog only when it started and ended on the backdrop (not after selecting text).
+  // Клик закрывает окно, только если начался и закончился на фоне (не после выделения текста).
+  const handleBackdropMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+    pressedOnBackdropRef.current = e.target === e.currentTarget;
+  };
+
   const handleBackdropClick = (e: MouseEvent<HTMLDivElement>) => {
+    const startedOnBackdrop = pressedOnBackdropRef.current;
+    pressedOnBackdropRef.current = false;
     if (
       closeOnBackdropClick &&
+      startedOnBackdrop &&
       e.target === e.currentTarget &&
       !isSubmitting &&
       isOpen
@@ -289,7 +380,16 @@ export const Modal = ({
 
   const handleDialogSubmit = (e: FormEvent<HTMLDivElement>) => {
     const target = e.target;
-    if (target instanceof HTMLFormElement && target.id === formId) {
+    if (!(target instanceof HTMLFormElement)) return;
+    // A form with the formId, or any form nobody handled (no own handler, no `action`), runs the dialog action
+    // instead of reloading the page.
+    // Форма с formId или любая необработанная форма (нет своего обработчика и `action`) запускает действие окна
+    // вместо перезагрузки страницы.
+    const unhandled =
+      !e.defaultPrevented &&
+      !target.hasAttribute("action") &&
+      target.method !== "dialog";
+    if (target.id === formId || unhandled) {
       e.preventDefault();
       void executeAction();
     }
@@ -303,9 +403,11 @@ export const Modal = ({
 
   return createPortal(
     <div
+      ref={overlayRef}
       className={`${styles.overlay} ${
         isOpen ? styles.overlayOpen : styles.overlayClose
       }`}
+      onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
       onAnimationEnd={handleAnimationEnd}
     >
@@ -318,22 +420,23 @@ export const Modal = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        aria-describedby={typeof children === "function" ? undefined : bodyId}
         tabIndex={-1}
         onKeyDown={handleDialogKeyDown}
         onSubmit={handleDialogSubmit}
       >
         {/* 1. Заголовок */}
         <header className={styles.header}>
-          <div
+          <h2
             id={titleId}
             className={`${styles.title} SubtitleTextBlockStyle`}
           >
             {title}
-          </div>
+          </h2>
           <Button
             icon={<CloseIcon />}
-            aria-label="Закрыть модальное окно"
-            onClick={onClose}
+            aria-label={closeLabel}
+            onClick={() => onClose()}
             disabled={isSubmitting}
             height={40}
           />
@@ -341,6 +444,7 @@ export const Modal = ({
 
         {/* 2. Тело окна */}
         <div
+          id={bodyId}
           className={`${styles.body} ${
             !hasAction ? styles.bodyNoFooter : ""
           } BodyTextBlockStyle`}
