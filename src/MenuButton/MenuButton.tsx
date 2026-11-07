@@ -5,7 +5,6 @@ import {
   useCallback,
   useEffect,
   useId,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -18,6 +17,9 @@ import type {
 } from "react";
 import { createPortal } from "react-dom";
 import { FrostedGlass } from "../FrostedGlass";
+import { cx } from "../utils/cx";
+import { useForwardedRef } from "../utils/useForwardedRef";
+import { useIsomorphicLayoutEffect } from "../utils/useIsomorphicLayoutEffect";
 import styles from "./MenuButton.module.css";
 
 /**
@@ -79,12 +81,6 @@ export interface MenuButtonProps extends Omit<
   /** Class of the menu panel. / Класс панели меню. */
   menuClassName?: string;
 }
-
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
-
-const cx = (...parts: Array<string | false | null | undefined>): string =>
-  parts.filter(Boolean).join(" ");
 
 const isSeparator = (e: MenuEntry): e is MenuSeparator =>
   "type" in e && e.type === "separator";
@@ -192,15 +188,8 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
     const [client, setClient] = useState(false);
     const show = open || present;
 
-    const buttonRef = useRef<HTMLButtonElement | null>(null);
-    const setButtonRef = useCallback(
-      (node: HTMLButtonElement | null) => {
-        buttonRef.current = node;
-        if (typeof forwardedRef === "function") forwardedRef(node);
-        else if (forwardedRef) forwardedRef.current = node;
-      },
-      [forwardedRef],
-    );
+    const { ref: buttonRef, setRefs: setButtonRef } =
+      useForwardedRef<HTMLButtonElement>(forwardedRef);
     /** The element whose rectangle the menu grows from. / Элемент, из прямоугольника которого растёт меню. */
     const anchorRef = useRef<HTMLElement | null>(null);
     const frameRef = useRef<HTMLDivElement | null>(null);
@@ -308,66 +297,72 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
       [],
     );
 
+    /*
+     * Measures the button and the menu and writes the geometry of the morph. Returns false when something
+     * is not mounted yet.
+     * Замеряет кнопку и меню и записывает геометрию превращения. Возвращает false, если что-то ещё не смонтировано.
+     */
+    const measure = (): boolean => {
+      const frame = frameRef.current;
+      const anchor = anchorRef.current;
+      const menu = menuRef.current;
+      if (!frame || !anchor || !menu) return false;
+
+      const a = anchor.getBoundingClientRect();
+      const W = menu.offsetWidth;
+      const H = menu.offsetHeight;
+      const vw = document.documentElement.clientWidth;
+      const vh = document.documentElement.clientHeight;
+      const M = VIEWPORT_MARGIN;
+
+      // horizontal: keep the chosen edge, flip when it does not fit
+      // по горизонтали: держим выбранный край, при нехватке места разворачиваем
+      let left = align === "end" ? a.right - W : a.left;
+      if (left < M && align === "end") left = a.left;
+      if (left + W > vw - M && align === "start") left = a.right - W;
+      left = clamp(left, M, Math.max(M, vw - M - W));
+      // vertical: grows down from the top of the button, or up from its bottom
+      // по вертикали: растёт вниз от верха кнопки или вверх от её низа
+      const up = a.top + H > vh - M && a.bottom - H >= M;
+      const top = clamp(up ? a.bottom - H : a.top, M, Math.max(M, vh - M - H));
+
+      const from: Rect = {
+        l: a.left,
+        t: a.top,
+        w: a.width,
+        h: a.height,
+        r: Math.min(a.width, a.height) / 2,
+      };
+      const radius =
+        (parseFloat(
+          getComputedStyle(anchor).getPropertyValue("--ControlCornerRadius"),
+        ) || 8) * MENU_RADIUS_FACTOR;
+      const to: Rect = { l: left, t: top, w: W, h: H, r: radius };
+      geo.current = { from, to };
+
+      const right = a.left + a.width / 2 > left + W / 2;
+      frame.dataset.x = right ? "right" : "left";
+      frame.dataset.y = up ? "bottom" : "top";
+      frame.style.setProperty("--menu-anchor-w", `${a.width}px`);
+      frame.style.setProperty("--menu-anchor-h", `${a.height}px`);
+      // the panel lives in <body>: carry the theme of the button over
+      // панель живёт в <body>: переносим тему кнопки
+      const themed = anchor.closest<HTMLElement>("[data-theme]");
+      if (themed?.dataset.theme) frame.dataset.theme = themed.dataset.theme;
+      else delete frame.dataset.theme;
+      return true;
+    };
+
     // Open or close: measure, then run the spring.
     // Открытие и закрытие: замеряем и запускаем пружину.
     useIsomorphicLayoutEffect(() => {
       if (!client) return;
-      const frame = frameRef.current;
-      const anchor = anchorRef.current;
       const menu = menuRef.current;
       const s = spring.current;
 
       if (open) {
-        if (!frame || !anchor || !menu) return;
+        if (!measure() || !menu) return;
         setPresent(true);
-
-        const a = anchor.getBoundingClientRect();
-        const W = menu.offsetWidth;
-        const H = menu.offsetHeight;
-        const vw = document.documentElement.clientWidth;
-        const vh = document.documentElement.clientHeight;
-        const M = VIEWPORT_MARGIN;
-
-        // horizontal: keep the chosen edge, flip when it does not fit
-        // по горизонтали: держим выбранный край, при нехватке места разворачиваем
-        let left = align === "end" ? a.right - W : a.left;
-        if (left < M && align === "end") left = a.left;
-        if (left + W > vw - M && align === "start") left = a.right - W;
-        left = clamp(left, M, Math.max(M, vw - M - W));
-        // vertical: grows down from the top of the button, or up from its bottom
-        // по вертикали: растёт вниз от верха кнопки или вверх от её низа
-        const up = a.top + H > vh - M && a.bottom - H >= M;
-        const top = clamp(
-          up ? a.bottom - H : a.top,
-          M,
-          Math.max(M, vh - M - H),
-        );
-
-        const from: Rect = {
-          l: a.left,
-          t: a.top,
-          w: a.width,
-          h: a.height,
-          r: Math.min(a.width, a.height) / 2,
-        };
-        const radius =
-          (parseFloat(
-            getComputedStyle(anchor).getPropertyValue("--ControlCornerRadius"),
-          ) || 8) * MENU_RADIUS_FACTOR;
-        const to: Rect = { l: left, t: top, w: W, h: H, r: radius };
-        geo.current = { from, to };
-
-        const right = a.left + a.width / 2 > left + W / 2;
-        frame.dataset.x = right ? "right" : "left";
-        frame.dataset.y = up ? "bottom" : "top";
-        frame.style.setProperty("--menu-anchor-w", `${a.width}px`);
-        frame.style.setProperty("--menu-anchor-h", `${a.height}px`);
-        // the panel lives in <body>: carry the theme of the button over
-        // панель живёт в <body>: переносим тему кнопки
-        const themed = anchor.closest<HTMLElement>("[data-theme]");
-        if (themed?.dataset.theme) frame.dataset.theme = themed.dataset.theme;
-        else delete frame.dataset.theme;
-
         apply(s.x);
         runSpring(1);
         (viaKeyboard.current
@@ -378,10 +373,23 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
         )?.focus({ preventScroll: true });
         viaKeyboard.current = false;
       } else if (present) {
+        // closed by the parent while the focus is inside: give it back to the button
+        // закрыто родителем, пока фокус внутри меню: возвращаем его на кнопку
+        if (menu?.contains(document.activeElement)) restoreFocus.current = true;
         runSpring(0, () => setPresent(false));
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, client]);
+
+    // The rows changed while the menu is open: the panel follows the new size.
+    // Строки изменились, пока меню открыто: панель следует за новым размером.
+    useIsomorphicLayoutEffect(() => {
+      const menu = menuRef.current;
+      const g = geo.current;
+      if (!open || !menu || !g) return;
+      if (menu.offsetWidth === g.to.w && menu.offsetHeight === g.to.h) return;
+      if (measure()) apply(spring.current.x);
+    });
 
     // Return focus to the button once it is visible again.
     // Возвращаем фокус на кнопку, когда она снова видна.
@@ -447,6 +455,9 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
           return go(rows.length - 1);
         case "Tab":
           e.preventDefault();
+          // keeps an enclosing focus trap (Modal) out of it
+          // не даёт охватывающей ловушке фокуса (Modal) вмешаться
+          e.stopPropagation();
           return setOpen(false, true);
         default: {
           // typeahead by the first letter / быстрый переход по первой букве
@@ -536,6 +547,7 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
               ref={frameRef}
               className={styles.frame}
               data-appearance={appearance}
+              data-state={open ? "open" : "closing"}
             >
               <FrostedGlass
                 className={cx(styles.glass, menuClassName)}

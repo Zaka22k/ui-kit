@@ -52,12 +52,11 @@
 }
 
 .itemActive {
-  background-color: var(--fill-primary);
-  color: var(--text-selected);
+  background-color: var(--fill-secondary);
 }
 
 .item:active {
-  background-color: var(--fill-secondary);
+  background-color: var(--fill-primary);
 }
 
 .danger {
@@ -114,5 +113,26 @@
   }
   .item {
     transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .itemActive {
+    background-color: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .itemActive .hint {
+    color: HighlightText;
+  }
+
+  .disabled,
+  .disabled.danger {
+    color: GrayText;
+  }
+
+  .separator {
+    background-color: CanvasText;
   }
 }

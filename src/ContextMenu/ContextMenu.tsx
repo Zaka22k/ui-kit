@@ -4,13 +4,14 @@ import {
   useCallback,
   useEffect,
   useId,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
 import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { cx } from "../utils/cx";
+import { useIsomorphicLayoutEffect } from "../utils/useIsomorphicLayoutEffect";
 import styles from "./ContextMenu.module.css";
 
 /**
@@ -73,12 +74,6 @@ export interface ContextMenuProps {
   className?: string;
 }
 
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
-
-const cx = (...parts: Array<string | false | null | undefined>): string =>
-  parts.filter(Boolean).join(" ");
-
 const isSeparator = (item: ContextMenuItem): item is ContextMenuSeparator =>
   "type" in item && item.type === "separator";
 
@@ -137,8 +132,10 @@ export function ContextMenu({
     if (!el) return;
     const w = el.offsetWidth;
     const h = el.offsetHeight;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    // clientWidth/clientHeight do not include the scrollbar
+    // clientWidth/clientHeight не включают полосу прокрутки
+    const vw = document.documentElement.clientWidth;
+    const vh = document.documentElement.clientHeight;
 
     const flipX = x + w > vw - EDGE && x - w >= EDGE;
     const flipY = y + h > vh - EDGE && y - h >= EDGE;
@@ -237,8 +234,26 @@ export function ContextMenu({
       case "Tab":
         onCloseRef.current(true);
         break;
-      default:
-        return;
+      default: {
+        // typeahead by the first letter / быстрый переход по первой букве
+        if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
+        const ch = e.key.toLowerCase();
+        const at = enabled.indexOf(active);
+        const order = [...enabled.slice(at + 1), ...enabled.slice(0, at + 1)];
+        const hit = order.find((i) =>
+          (
+            document
+              .getElementById(`${baseId}-${i}`)
+              ?.querySelector(`.${styles.label}`)?.textContent ?? ""
+          )
+            .trim()
+            .toLowerCase()
+            .startsWith(ch),
+        );
+        if (hit === undefined) return;
+        setActive(hit);
+        break;
+      }
     }
     e.preventDefault();
     e.stopPropagation();

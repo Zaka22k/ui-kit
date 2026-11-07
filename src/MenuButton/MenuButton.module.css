@@ -75,6 +75,16 @@
     pointer-events: none;
   }
 
+  @media (hover: hover) {
+    &:hover:not(:disabled):not([data-open]) {
+      background: var(--fill-secondary);
+    }
+  }
+
+  &:active:not(:disabled):not([data-open]) {
+    background: var(--fill-primary);
+  }
+
   &[data-open] {
     background: transparent;
 
@@ -108,6 +118,11 @@
   font-size: var(--font-body);
 }
 
+/* The menu is folding back: its rows no longer react. / Меню складывается: строки больше не реагируют. */
+.frame[data-state="closing"] {
+  pointer-events: none;
+}
+
 .frame[data-appearance="plain"] .glass {
   opacity: calc(1 - var(--menu-icon));
 }
@@ -137,6 +152,7 @@
   min-width: 200px;
   max-width: calc(100vw - 16px);
   max-height: calc(100vh - 16px);
+  max-height: calc(100dvh - 16px);
   padding: var(--menu-padding);
   overflow-y: auto;
   opacity: var(--menu-content);
@@ -222,5 +238,37 @@
   .button > svg,
   .item {
     transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .frame {
+    box-sizing: border-box;
+    border: 1px solid CanvasText;
+    background: Canvas;
+  }
+
+  .panel {
+    border: 1px solid ButtonText;
+  }
+
+  .button {
+    color: ButtonText;
+  }
+
+  .plain:hover:not(:disabled),
+  .item:hover:not([aria-disabled="true"]),
+  .item:focus-visible {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .item[aria-disabled="true"] {
+    color: GrayText;
+  }
+
+  .separator {
+    background: CanvasText;
   }
 }

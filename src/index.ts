@@ -12,6 +12,7 @@ export * from "./DataGrid";
 export * from "./Toast";
 export * from "./Theme";
 export * from "./MenuButton";
+export * from "./ContextMenu";
 export * from "./List";
 export { FrostedGlass } from "./FrostedGlass";
 export type { FrostedGlassOptions, FrostedGlassProps } from "./FrostedGlass";
