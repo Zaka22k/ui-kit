@@ -4,7 +4,6 @@ import {
   useCallback,
   useEffect,
   useId,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -20,6 +19,8 @@ import Button from "../Button";
 import { ContextMenu } from "../ContextMenu/ContextMenu";
 import type { ContextMenuItem } from "../ContextMenu/ContextMenu";
 import ProgressRing from "../ProgressRing/ProgressRing";
+import { cx } from "../utils/cx";
+import { useIsomorphicLayoutEffect } from "../utils/useIsomorphicLayoutEffect";
 import styles from "./List.module.css";
 
 /**
@@ -188,18 +189,20 @@ export interface ListProps<T> {
   itemAppearance?: "default" | "none";
   /** Shown when there are no items. / Показывается, когда элементов нет. */
   emptyContent?: ReactNode;
+  /** Text next to the loading ring (read by screen readers). Default "Загрузка". / Текст рядом с кольцом загрузки (читают скринридеры). По умолчанию «Загрузка». */
+  loadingLabel?: string;
+  /** Text of the load error. Default "Не удалось загрузить данные." / Текст ошибки подгрузки. По умолчанию «Не удалось загрузить данные.». */
+  loadMoreErrorLabel?: string;
+  /** Text of the retry button. Default "Повторить". / Текст кнопки повтора. По умолчанию «Повторить». */
+  retryLabel?: string;
+  /** Accessible name of the item context menu. Default "Действия с элементом". / Доступное имя контекстного меню элемента. По умолчанию «Действия с элементом». */
+  itemMenuLabel?: string;
 
   className?: string;
   style?: CSSProperties;
   "aria-label"?: string;
   "aria-labelledby"?: string;
 }
-
-const useIsomorphicLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
-
-const cx = (...parts: Array<string | false | null | undefined>): string =>
-  parts.filter(Boolean).join(" ");
 
 const DEFAULT_ITEM_WIDTH = 200;
 const DEFAULT_ITEM_HEIGHT: Record<ListLayout, number> = {
@@ -297,6 +300,10 @@ export function List<T>({
   itemMenu,
   itemAppearance = "default",
   emptyContent = "Нет данных",
+  loadingLabel = "Загрузка",
+  loadMoreErrorLabel = "Не удалось загрузить данные.",
+  retryLabel = "Повторить",
+  itemMenuLabel = "Действия с элементом",
   className,
   style,
   "aria-label": ariaLabel,
@@ -306,6 +313,10 @@ export function List<T>({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  /** The element with `role="listbox"`: it holds focus and the keyboard. / Элемент с `role="listbox"`: в нём фокус и клавиатура. */
+  const listRef = useRef<HTMLDivElement | null>(null);
+  /** The scrollable ancestor found once, not on every scroll event. / Прокручиваемый предок, найденный один раз, а не на каждое событие scroll. */
+  const scrollParentRef = useRef<HTMLElement | Window | null>(null);
 
   const horizontal = layout === "horizontal";
   const isGrid = layout === "grid";
@@ -314,9 +325,11 @@ export function List<T>({
     !horizontal && (height === undefined || height === "auto");
 
   const getItemIdRef = useRef(getItemId);
-  getItemIdRef.current = getItemId;
   const onEndReachedRef = useRef(onEndReached);
-  onEndReachedRef.current = onEndReached;
+  useIsomorphicLayoutEffect(() => {
+    getItemIdRef.current = getItemId;
+    onEndReachedRef.current = onEndReached;
+  });
 
   // ───── Items and ids / Элементы и id ─────
   const count = items.length;
@@ -329,6 +342,22 @@ export function List<T>({
     ids.forEach((id, index) => map.set(id, index));
     return map;
   }, [ids]);
+
+  const warnedRef = useRef({ label: false, ids: false });
+  useEffect(() => {
+    if (ariaLabel || ariaLabelledBy || warnedRef.current.label) return;
+    warnedRef.current.label = true;
+    console.warn(
+      "List: передайте aria-label или aria-labelledby, иначе у списка нет доступного имени",
+    );
+  }, [ariaLabel, ariaLabelledBy]);
+  useEffect(() => {
+    if (indexById.size === ids.length || warnedRef.current.ids) return;
+    warnedRef.current.ids = true;
+    console.warn(
+      "List: getItemId вернул повторяющиеся id, выбор, курсор и ключи элементов будут работать неверно",
+    );
+  }, [indexById, ids]);
 
   // ───── Geometry / Геометрия ─────
   const [metrics, setMetrics] = useState<Metrics>({ width: 0, view: 0 });
@@ -387,14 +416,16 @@ export function List<T>({
       view = el.clientHeight;
       offset = el.scrollTop;
     } else {
-      const scrollParent = getScrollParent(root);
+      const scrollParent = scrollParentRef.current ?? getScrollParent(root);
       width = body.clientWidth;
       const bodyRect = body.getBoundingClientRect();
       if (scrollParent instanceof HTMLElement) {
         view = scrollParent.clientHeight;
         offset = scrollParent.getBoundingClientRect().top - bodyRect.top;
       } else {
-        view = window.innerHeight;
+        // clientHeight does not include the horizontal scrollbar
+        // clientHeight не включает горизонтальную полосу прокрутки
+        view = document.documentElement.clientHeight;
         offset = -bodyRect.top;
       }
     }
@@ -410,26 +441,39 @@ export function List<T>({
   useIsomorphicLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return undefined;
-    updateMetrics();
 
-    const scrollTarget = usesPageScroll
-      ? getScrollParent(root)
-      : scrollerRef.current;
-    const onScroll = () => updateMetrics();
-    scrollTarget?.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", updateMetrics);
-
+    let scrollTarget: HTMLElement | Window | null = null;
     let ro: ResizeObserver | null = null;
+    const onScroll = () => updateMetrics();
+    // The scrollable ancestor is looked up here and on resize, not on every scroll.
+    // Прокручиваемого предка ищем здесь и при ресайзе, а не на каждый scroll.
+    const bind = () => {
+      const next = usesPageScroll ? getScrollParent(root) : scrollerRef.current;
+      if (next === scrollTarget) return;
+      scrollTarget?.removeEventListener("scroll", onScroll);
+      scrollTarget = next;
+      scrollParentRef.current = usesPageScroll ? next : null;
+      scrollTarget?.addEventListener("scroll", onScroll, { passive: true });
+      if (next instanceof HTMLElement) ro?.observe(next);
+    };
+    const onChange = () => {
+      bind();
+      updateMetrics();
+    };
+
     if (typeof ResizeObserver !== "undefined") {
-      ro = new ResizeObserver(updateMetrics);
+      ro = new ResizeObserver(onChange);
       ro.observe(root);
-      if (scrollTarget instanceof HTMLElement) ro.observe(scrollTarget);
     }
+    bind();
+    updateMetrics();
+    window.addEventListener("resize", onChange);
 
     return () => {
       scrollTarget?.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", updateMetrics);
+      window.removeEventListener("resize", onChange);
       ro?.disconnect();
+      scrollParentRef.current = null;
     };
   }, [usesPageScroll, horizontal, updateMetrics]);
 
@@ -483,16 +527,16 @@ export function List<T>({
     setMenu(null);
   }
 
-  const mountedRef = useRef(false);
+  // Compare with the token that was already applied: StrictMode runs effects twice on mount.
+  // Сравниваем с уже применённым токеном: StrictMode дважды запускает эффекты при монтировании.
+  const appliedTokenRef = useRef(resetToken);
   useIsomorphicLayoutEffect(() => {
-    if (!mountedRef.current) {
-      mountedRef.current = true;
-      return;
-    }
+    if (appliedTokenRef.current === resetToken) return;
+    appliedTokenRef.current = resetToken;
     const root = rootRef.current;
     if (usesPageScroll) {
       if (root && offsetRef.current > 0) {
-        const scrollParent = getScrollParent(root);
+        const scrollParent = scrollParentRef.current ?? getScrollParent(root);
         if (scrollParent instanceof HTMLElement) {
           scrollParent.scrollTop = Math.max(
             0,
@@ -513,12 +557,11 @@ export function List<T>({
     setTopLine(0);
     requestedRef.current = -1;
     updateMetrics();
-  }, [resetToken]);
+  }, [resetToken, usesPageScroll, updateMetrics]);
 
   const menuId = menu?.id;
   const focusList = () => {
-    const target = usesPageScroll ? rootRef.current : scrollerRef.current;
-    target?.focus({ preventScroll: true });
+    listRef.current?.focus({ preventScroll: true });
   };
   useEffect(() => {
     if (menuId === undefined || indexById.has(menuId)) return;
@@ -528,6 +571,12 @@ export function List<T>({
   }, [menuId, indexById]);
 
   // ───── Infinite scroll / Бесконечная прокрутка ─────
+  // The data ended: the next `hasMore` starts a fresh request even for the same `count`.
+  // Данные кончились: следующий `hasMore` снова может запросить порцию при том же `count`.
+  useEffect(() => {
+    if (!hasMore) requestedRef.current = -1;
+  }, [hasMore]);
+
   const measured = metrics.view > 0;
   useEffect(() => {
     if (!hasMore || loadingMore || loadMoreError || !measured) return;
@@ -567,7 +616,10 @@ export function List<T>({
       }
       return;
     }
-    const el = usesPageScroll && root ? getScrollParent(root) : scrollerRef.current;
+    const el =
+      usesPageScroll && root
+        ? (scrollParentRef.current ?? getScrollParent(root))
+        : scrollerRef.current;
     if (el instanceof HTMLElement) {
       if (el.scrollHeight - (el.scrollTop + el.clientHeight) <= lineSize + 2) {
         el.scrollTop = el.scrollHeight;
@@ -610,7 +662,7 @@ export function List<T>({
     const root = rootRef.current;
     const body = bodyRef.current;
     if (!root || !body) return;
-    const scrollParent = getScrollParent(root);
+    const scrollParent = scrollParentRef.current ?? getScrollParent(root);
     const scrollerTop =
       scrollParent instanceof HTMLElement
         ? scrollParent.getBoundingClientRect().top
@@ -618,7 +670,7 @@ export function List<T>({
     const viewHeight =
       scrollParent instanceof HTMLElement
         ? scrollParent.clientHeight
-        : window.innerHeight;
+        : document.documentElement.clientHeight;
     // The sticky header of `Page` covers the top of the scroller.
     // Закреплённая шапка `Page` закрывает верх прокручиваемой области.
     const topInset =
@@ -657,8 +709,10 @@ export function List<T>({
     return true;
   };
 
+  const keyMenuAtRef = useRef(0);
   const openMenuAtActiveItem = () => {
     if (activeIndex < 0) return;
+    keyMenuAtRef.current = Date.now();
     const index = activeIndex;
     ensureVisible(index);
     // The menu closes on any `scroll`, and a scroll made just now (or a moment ago by an arrow
@@ -768,6 +822,9 @@ export function List<T>({
     if (e.target !== e.currentTarget || e.button !== 0) return;
     if (!itemMenu || activeIndex < 0) return;
     e.preventDefault();
+    // `Shift+F10` and the "Menu" key raise `keydown` and `contextmenu`: open once
+    // `Shift+F10` и клавиша «Меню» дают `keydown` и `contextmenu`: открываем один раз
+    if (Date.now() - keyMenuAtRef.current < 500) return;
     openMenuAtActiveItem();
   };
 
@@ -863,7 +920,10 @@ export function List<T>({
   for (let l = start; l < end; l++) lines.push(l);
   if (activeIndex >= 0) {
     const activeLine = Math.floor(activeIndex / cols);
-    if (activeLine < start || activeLine >= end) lines.push(activeLine);
+    // keep DOM order = item order for screen readers
+    // порядок в DOM = порядок элементов, для скринридеров
+    if (activeLine < start) lines.unshift(activeLine);
+    else if (activeLine >= end) lines.push(activeLine);
   }
 
   const footerNode = showFooter && (
@@ -884,13 +944,13 @@ export function List<T>({
       role={loadingMore ? "status" : "alert"}
     >
       {loadingMore ? (
-        <ProgressRing loading size={20} aria-label="Загрузка" />
+        <ProgressRing loading size={20} aria-label={loadingLabel} />
       ) : (
         <>
           <span className={styles.footerError}>
-            Не удалось загрузить данные.
+            {loadMoreErrorLabel}
           </span>
-          <Button onClick={retryLoadMore}>Повторить</Button>
+          <Button onClick={retryLoadMore}>{retryLabel}</Button>
         </>
       )}
     </div>
@@ -900,37 +960,46 @@ export function List<T>({
     <div
       ref={bodyRef}
       role="presentation"
-      className={cx(styles.body, horizontal && styles.track)}
+      className={styles.body}
       style={
         horizontal
-          ? {
-              width:
-                mainLength +
-                (showFooter ? (lineCount > 0 ? gap : 0) + FOOTER_WIDTH : 0),
-              height: itemH,
-            }
+          ? { width: mainLength, height: itemH }
           : { height: mainLength }
       }
     >
       {lines.map(renderLine)}
-      {horizontal && footerNode}
     </div>
   );
 
-  const listAriaProps = {
-    role: "listbox" as const,
-    tabIndex: 0,
-    "aria-label": ariaLabel,
-    "aria-labelledby": ariaLabelledBy,
-    "aria-orientation": horizontal ? ("horizontal" as const) : ("vertical" as const),
-    "aria-busy": loadingMore || undefined,
-    "aria-activedescendant":
-      activeIndex >= 0 ? itemDomId(activeIndex) : undefined,
-    onKeyDown: handleKeyDown,
-    onFocus: handleFocus,
-    onBlur: handleBlur,
-    onContextMenu: handleListContextMenu,
-  };
+  // Only the items are inside the listbox: the footer and the empty message are next to it.
+  // An empty list is a plain group and is not a tab stop.
+  // В listbox только элементы: футер и пустое сообщение рядом с ним.
+  // Пустой список это обычная группа, и в порядок табуляции он не входит.
+  const hasItems = count > 0;
+  const listNode = (
+    <div
+      ref={listRef}
+      role={hasItems ? "listbox" : "group"}
+      tabIndex={hasItems ? 0 : undefined}
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
+      aria-orientation={
+        hasItems ? (horizontal ? "horizontal" : "vertical") : undefined
+      }
+      aria-busy={loadingMore || undefined}
+      aria-activedescendant={
+        hasItems && activeIndex >= 0 ? itemDomId(activeIndex) : undefined
+      }
+      className={cx(styles.listbox, hasItems && styles.focusTarget)}
+      style={horizontal ? { width: mainLength } : undefined}
+      onKeyDown={handleKeyDown}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onContextMenu={handleListContextMenu}
+    >
+      {bodyNode}
+    </div>
+  );
 
   const rootStyle = {
     ...(!horizontal && !usesPageScroll ? { height } : {}),
@@ -945,12 +1014,19 @@ export function List<T>({
   if (horizontal) {
     content = (
       <>
-        <div
-          ref={scrollerRef}
-          {...listAriaProps}
-          className={cx(styles.focusTarget, styles.hScroller)}
-        >
-          {bodyNode}
+        <div ref={scrollerRef} className={styles.hScroller}>
+          <div
+            className={styles.track}
+            style={{
+              width:
+                mainLength +
+                (showFooter ? (lineCount > 0 ? gap : 0) + FOOTER_WIDTH : 0),
+              height: itemH,
+            }}
+          >
+            {listNode}
+            {footerNode}
+          </div>
         </div>
         {emptyNode}
       </>
@@ -958,19 +1034,15 @@ export function List<T>({
   } else if (usesPageScroll) {
     content = (
       <>
-        {bodyNode}
+        {listNode}
         {footerNode}
         {emptyNode}
       </>
     );
   } else {
     content = (
-      <div
-        ref={scrollerRef}
-        {...listAriaProps}
-        className={cx(styles.focusTarget, styles.scroller)}
-      >
-        {bodyNode}
+      <div ref={scrollerRef} className={styles.scroller}>
+        {listNode}
         {footerNode}
         {emptyNode}
       </div>
@@ -980,11 +1052,9 @@ export function List<T>({
   return (
     <div
       ref={rootRef}
-      {...(usesPageScroll ? listAriaProps : {})}
       className={cx(
         styles.root,
         "BodyTextBlockStyle",
-        usesPageScroll && styles.focusTarget,
         !horizontal && !usesPageScroll && styles.containedScroll,
         horizontal && bleed && styles.bleed,
         className,
@@ -999,7 +1069,7 @@ export function List<T>({
           x={menu.x}
           y={menu.y}
           activateFirst={menu.viaKeyboard}
-          aria-label="Действия с элементом"
+          aria-label={itemMenuLabel}
           onClose={(restoreFocus) => {
             setMenu(null);
             if (restoreFocus) focusList();

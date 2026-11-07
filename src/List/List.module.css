@@ -38,6 +38,13 @@
   outline: none;
 }
 
+/* Элемент с role="listbox": в нём фокус и клавиатура, внутри только элементы списка */
+.listbox {
+  position: relative;
+  min-width: 0;
+  outline: none;
+}
+
 /* ───────────── Тело ───────────── */
 
 .body {
@@ -88,6 +95,7 @@
 }
 
 .track {
+  position: relative;
   flex: none;
 }
 
@@ -219,7 +227,7 @@
 }
 
 .footerError {
-  color: var(--system-red, var(--label-secondary));
+  color: var(--system-red-text);
 }
 
 .empty {
@@ -227,7 +235,7 @@
   place-items: center;
   min-height: 120px;
   padding: 24px;
-  color: var(--label-secondary);
+  color: var(--label-secondary-strong);
   text-align: center;
 }
 
@@ -236,5 +244,45 @@
   .itemCard,
   .itemCard::after {
     transition: none;
+  }
+}
+
+/*
+ * Режим высокой контрастности: фон и тени отключаются, поэтому выбор и границы рисуем
+ * системными цветами, а курсор клавиатуры остаётся контуром.
+ */
+@media (forced-colors: active) {
+  .itemRow:hover {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  .itemRow.selected {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  .itemRow.selected::before {
+    background-color: Highlight;
+    forced-color-adjust: none;
+  }
+
+  .itemCard::after {
+    box-shadow: none;
+    border: 1px solid CanvasText;
+  }
+
+  .itemCard:hover::after {
+    border-color: Highlight;
+  }
+
+  .itemCard.selected::after {
+    box-shadow: none;
+    border: 3px solid Highlight;
+  }
+
+  .focusTarget:focus-visible .active {
+    outline: 2px solid CanvasText;
+    outline-offset: -2px;
   }
 }
