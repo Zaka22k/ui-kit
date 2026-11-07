@@ -282,3 +282,49 @@
     transition: none;
   }
 }
+
+@media (forced-colors: active) {
+  .control,
+  .disabled .control {
+    border-color: ButtonBorder;
+    background-color: Field;
+    color: FieldText;
+  }
+
+  .invalid .control {
+    border-color: Mark;
+    border-width: 2px;
+  }
+
+  .control:focus-within,
+  .searchPanel:has(.searchInput:focus) {
+    outline-color: Highlight;
+  }
+
+  .disabled .control,
+  .disabled .control:hover,
+  .searchPanel:has(.searchInput:disabled) {
+    border-color: GrayText;
+    color: GrayText;
+  }
+
+  .searchPanel {
+    border: 1px solid ButtonBorder;
+  }
+
+  .input::placeholder,
+  .searchInput::placeholder {
+    color: GrayText;
+  }
+
+  .hint,
+  .invalid .hint,
+  .icon,
+  .searchIcon {
+    color: CanvasText;
+  }
+
+  .clearButton {
+    color: ButtonText;
+  }
+}

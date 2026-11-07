@@ -1,2 +1,4 @@
-export { TextField } from "./TextField.tsx";
-export { SearchField } from "./SearchField.tsx";
+export { TextField } from "./TextField";
+export type { FieldProps, TextFieldProps } from "./TextField";
+export { SearchField } from "./SearchField";
+export type { SearchFieldProps } from "./SearchField";

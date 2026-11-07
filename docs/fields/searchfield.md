@@ -18,7 +18,7 @@
 | `className`        | `string`                                                        | Пользовательский CSS-класс. Применяется к внешней стеклянной панели `FrostedGlass`.                                                        |
 | `style`            | `CSSProperties`                                                 | Инлайн-стили. Применяются к внешней стеклянной панели `FrostedGlass`.                                                                      |
 | `ref`              | `Ref<HTMLInputElement>`                                         | Ссылка на нативный элемент `<input type="search">`.                                                                                       |
-| `...props`         | `Omit<InputHTMLAttributes<HTMLInputElement>, "size" \| "type">` | Остальные нативные атрибуты `<input>` (`name`, `autoFocus`, `onKeyDown` и др.). Атрибуты `size` и `type` зарезервированы.                 |
+| `...props`         | `Omit<InputHTMLAttributes<HTMLInputElement>, "size" \| "type">` | Остальные нативные атрибуты `<input>` (`name`, `autoFocus`, `onKeyDown` и др.). Клавиша `Escape` при непустом поле очищает его так же, как кнопка очистки, если `onKeyDown` не вызвал `preventDefault()`. Атрибуты `size` и `type` зарезервированы.                 |
 
 ## Быстрый старт
 

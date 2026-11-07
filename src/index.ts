@@ -6,6 +6,7 @@ export { ComboBox } from "./ComboBox";
 export * from "./Modal";
 export * from "./Fields";
 export { ProgressRing } from "./ProgressRing";
+export type { ProgressRingProps } from "./ProgressRing";
 export * from "./Toggles";
 export * from "./DataGrid";
 export * from "./Toast";

@@ -1,13 +1,16 @@
 "use client";
 
-import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import type {
   ChangeEvent,
   CSSProperties,
   InputHTMLAttributes,
+  KeyboardEvent,
   MouseEvent,
 } from "react";
 import { FrostedGlass } from "../FrostedGlass";
+import { cx } from "../utils/cx";
+import { useForwardedRef } from "../utils/useForwardedRef";
 import styles from "./Fields.module.css";
 
 export type SearchFieldProps = Omit<
@@ -37,9 +40,6 @@ export type SearchFieldProps = Omit<
  * при наведении, фокусе и disabled.
  */
 const SEARCH_TINT: CSSProperties = { backgroundColor: "var(--search-tint)" };
-
-const cx = (...classes: Array<string | false | null | undefined>): string =>
-  classes.filter(Boolean).join(" ");
 
 function SearchIcon() {
   return (
@@ -99,6 +99,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
       defaultValue,
       onChange,
       onClear,
+      onKeyDown,
       clearLabel = "Очистить поиск",
       placeholder = "Поиск…",
       disabled,
@@ -107,16 +108,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
     },
     forwardedRef,
   ) {
-    const innerRef = useRef<HTMLInputElement | null>(null);
-
-    const setRefs = useCallback(
-      (node: HTMLInputElement | null) => {
-        innerRef.current = node;
-        if (typeof forwardedRef === "function") forwardedRef(node);
-        else if (forwardedRef) forwardedRef.current = node;
-      },
-      [forwardedRef],
-    );
+    const { ref: innerRef, setRefs } = useForwardedRef(forwardedRef);
 
     const isControlled = value !== undefined;
     const [uncontrolledHasValue, setUncontrolledHasValue] = useState(() =>
@@ -159,7 +151,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
       onChange?.(e);
     };
 
-    const handleClear = () => {
+    const clearInput = () => {
       const input = innerRef.current;
       if (!input || disabled) return;
 
@@ -172,6 +164,14 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
 
       onClear?.();
       input.focus();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+      onKeyDown?.(e);
+      if (e.defaultPrevented || e.key !== "Escape") return;
+      if (!innerRef.current?.value) return;
+      e.preventDefault();
+      clearInput();
     };
 
     const keepInputFocus = (e: MouseEvent<HTMLButtonElement>) => {
@@ -197,6 +197,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
             value={value}
             defaultValue={defaultValue}
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
             placeholder={placeholder}
             disabled={disabled}
             aria-label={ariaLabel ?? placeholder}
@@ -208,7 +209,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
               aria-label={clearLabel}
               title={clearLabel}
               onMouseDown={keepInputFocus}
-              onClick={handleClear}
+              onClick={clearInput}
               className={styles.clearButton}
             >
               <ClearIcon />

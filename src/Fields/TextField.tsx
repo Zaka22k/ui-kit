@@ -1,8 +1,15 @@
 "use client";
 
 import { forwardRef, useId } from "react";
-import type { CSSProperties, InputHTMLAttributes, ReactNode } from "react";
+import type {
+  CSSProperties,
+  InputHTMLAttributes,
+  MouseEvent,
+  ReactNode,
+} from "react";
 import { useFormStatus } from "react-dom";
+import { cx } from "../utils/cx";
+import { useForwardedRef } from "../utils/useForwardedRef";
 import styles from "./Fields.module.css";
 
 /* ───────────── Типы ───────────── */
@@ -26,8 +33,7 @@ export type FieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size"> & {
   style?: CSSProperties;
 };
 
-const cx = (...classes: Array<string | false | null | undefined>): string =>
-  classes.filter(Boolean).join(" ");
+export type TextFieldProps = FieldProps;
 
 const hasContent = (node: ReactNode): boolean =>
   node !== undefined && node !== null && node !== false && node !== "";
@@ -50,10 +56,16 @@ export const TextField = forwardRef<HTMLInputElement, FieldProps>(
       "aria-invalid": ariaInvalid,
       ...props
     },
-    ref,
+    forwardedRef,
   ) {
     const { pending } = useFormStatus();
-    const isDisabled = disabled || pending;
+    const { ref: inputRef, setRefs } = useForwardedRef(forwardedRef);
+    /*
+     * While the form is pending the input is read-only, not disabled, so it keeps focus.
+     * Пока форма отправляется, поле только для чтения, а не disabled, чтобы не терять фокус.
+     */
+    const isBusy = pending && !disabled;
+    const isDisabled = Boolean(disabled);
 
     const baseId = useId();
     const inputId = id ?? `${baseId}-input`;
@@ -65,18 +77,33 @@ export const TextField = forwardRef<HTMLInputElement, FieldProps>(
     const feedbackMessage =
       typeof error !== "boolean" && hasContent(error) ? error : hint;
     const hasFeedback = hasContent(feedbackMessage);
+    const showsErrorText = typeof error !== "boolean" && hasContent(error);
 
     const describedBy =
       [ariaDescribedBy, hasFeedback ? hintId : undefined]
         .filter(Boolean)
         .join(" ") || undefined;
 
+    /*
+     * Clicks on the padding or the icons focus the input; interactive content inside icons keeps its own behavior.
+     * Клик по отступам и иконкам фокусирует поле; интерактивное содержимое иконок работает как обычно.
+     */
+    const focusInput = (e: MouseEvent<HTMLDivElement>) => {
+      const input = inputRef.current;
+      const target = e.target as HTMLElement;
+      if (!input || isDisabled || target === input) return;
+      if (target.closest("button, a, input, select, textarea, [role='button']"))
+        return;
+      e.preventDefault();
+      input.focus();
+    };
+
     return (
       <div
         className={cx(
           styles.root,
           labelPlacement === "start" && styles.labelStart,
-          isDisabled && styles.disabled,
+          (isDisabled || isBusy) && styles.disabled,
           isInvalid && styles.invalid,
           className,
         )}
@@ -92,24 +119,31 @@ export const TextField = forwardRef<HTMLInputElement, FieldProps>(
         )}
 
         <div className={styles.fieldWrapper}>
-          <label className={styles.control}>
-            {startIcon && <span className={styles.icon}>{startIcon}</span>}
+          <div className={styles.control} onMouseDown={focusInput}>
+            {hasContent(startIcon) && (
+              <span className={styles.icon}>{startIcon}</span>
+            )}
             <input
               {...props}
-              ref={ref}
+              ref={setRefs}
               id={inputId}
               type={type}
               disabled={isDisabled}
+              readOnly={props.readOnly || isBusy}
+              aria-busy={isBusy || undefined}
               aria-describedby={describedBy}
               aria-invalid={isInvalid || undefined}
               className={cx(styles.input, "BodyTextBlockStyle")}
             />
-            {endIcon && <span className={styles.icon}>{endIcon}</span>}
-          </label>
+            {hasContent(endIcon) && (
+              <span className={styles.icon}>{endIcon}</span>
+            )}
+          </div>
 
           {hasFeedback && (
             <div
               id={hintId}
+              role={showsErrorText ? "alert" : undefined}
               className={cx(styles.hint, "CaptionTextBlockStyle")}
             >
               {feedbackMessage}
