@@ -6,7 +6,6 @@ import React, {
   useContext,
   useEffect,
   useId,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -22,6 +21,8 @@ import type {
 import { createPortal } from "react-dom";
 import { FrostedGlass } from "../FrostedGlass";
 import Button from "../Button";
+import { cx } from "../utils/cx";
+import { useIsomorphicLayoutEffect } from "../utils/useIsomorphicLayoutEffect";
 import {
   PageFrameContext,
   createPageTransitionInfo,
@@ -75,12 +76,6 @@ interface NavContextValue {
 }
 
 const NavContext = createContext<NavContextValue | null>(null);
-
-const useIsoLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
-
-const cx = (...parts: Array<string | false | null | undefined>) =>
-  parts.filter(Boolean).join(" ");
 
 function useControllable<T>(
   controlledValue: T | undefined,
@@ -202,6 +197,23 @@ function moveFocusInContainer(
   return true;
 }
 
+const TABBABLE =
+  'a[href], button:not(:disabled), input:not(:disabled):not([type="hidden"]), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Elements that Tab can reach: visible, not in a hidden (collapsed) group.
+ * Элементы, до которых доходит Tab: видимые, не в скрытой (свёрнутой) группе.
+ */
+function getTabbable(container: HTMLElement | null): HTMLElement[] {
+  if (!container) return [];
+  return Array.from(container.querySelectorAll<HTMLElement>(TABBABLE)).filter(
+    (el) =>
+      el.getClientRects().length > 0 &&
+      getComputedStyle(el).visibility !== "hidden" &&
+      !el.closest("[inert]"),
+  );
+}
+
 const FLYOUT_STYLE: CSSProperties = {
   position: "absolute",
   display: "flex",
@@ -279,7 +291,7 @@ function PageFrame({ info, setting, children }: PageFrameProps) {
     [],
   );
 
-  useIsoLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const element = ref.current;
     if (!element || !info) return undefined;
     const animations = resolvePageTransition(
@@ -436,7 +448,7 @@ export function NavigationView({
   const lastAutoModeRef = useRef<ResolvedPaneMode | null>(null);
 
   const prevModeRef = useRef(paneDisplayMode);
-  useIsoLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const prev = prevModeRef.current;
     prevModeRef.current = paneDisplayMode;
     if (prev === paneDisplayMode) return;
@@ -447,7 +459,7 @@ export function NavigationView({
     }
   }, [paneDisplayMode, setPaneOpen]);
 
-  useIsoLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!adaptive || autoMode === null) return;
     const prev = lastAutoModeRef.current;
     lastAutoModeRef.current = autoMode;
@@ -468,8 +480,16 @@ export function NavigationView({
   );
   const paneFull = fullWidthEnabled && !isScreenWideForOverlay;
 
+  // The toggle button; without it (hidden) focus goes to the page after the pane has closed.
+  // Кнопка панели; если её нет (скрыта), фокус идёт на страницу, когда панель закроется.
   const focusToggle = useCallback(() => {
-    paneRef.current?.querySelector<HTMLElement>("[data-nv-toggle]")?.focus();
+    const toggle =
+      paneRef.current?.querySelector<HTMLElement>("[data-nv-toggle]");
+    if (toggle) {
+      toggle.focus();
+      return;
+    }
+    requestAnimationFrame(() => stageRef.current?.focus({ preventScroll: true }));
   }, []);
 
   const overlayOpen = isOverlay && open;
@@ -484,22 +504,27 @@ export function NavigationView({
     }
   }, [overlayOpen, displayMode, setPaneOpen, focusToggle]);
 
-  useIsoLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     stageRef.current?.toggleAttribute("inert", overlayOpen);
   }, [overlayOpen]);
 
+  // The previous key lives in state and is updated while rendering: no refs are read in render.
+  // Прежний ключ хранится в состоянии и обновляется при рендере: ref в рендере не читается.
   const currentKey: PageKey | undefined = pageKey ?? selected ?? undefined;
-  const previousKeyRef = useRef<PageKey | undefined>(undefined);
-  const previousKey = previousKeyRef.current;
+  const [pageState, setPageState] = useState<{
+    key: PageKey | undefined;
+    prev: PageKey | undefined;
+  }>({ key: currentKey, prev: undefined });
+  if (pageState.key !== currentKey) {
+    setPageState({ key: currentKey, prev: pageState.key });
+  }
+  const previousKey = pageState.key === currentKey ? pageState.prev : pageState.key;
   const pageInfo =
     previousKey !== undefined &&
     currentKey !== undefined &&
     previousKey !== currentKey
       ? createPageTransitionInfo(previousKey, currentKey)
       : null;
-  useIsoLayoutEffect(() => {
-    previousKeyRef.current = currentKey;
-  }, [currentKey]);
 
   const select = useCallback(
     (
@@ -580,6 +605,23 @@ export function NavigationView({
       focusToggle();
       return;
     }
+    // The page below is inert while the pane is open over it: Tab goes around inside the pane.
+    // Страница под раскрытой поверх неё панелью inert: Tab ходит по кругу внутри панели.
+    if (event.key === "Tab" && overlayOpen) {
+      const tabbable = getTabbable(paneRef.current);
+      if (tabbable.length === 0) return;
+      const first = tabbable[0];
+      const last = tabbable[tabbable.length - 1];
+      const active = document.activeElement;
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+      return;
+    }
     if (moveFocusInContainer(paneRef.current, event.key, true)) {
       event.preventDefault();
     }
@@ -655,7 +697,7 @@ export function NavigationView({
           )}
         </nav>
 
-        <main ref={stageRef} className={styles.stage}>
+        <main ref={stageRef} tabIndex={-1} className={styles.stage}>
           <PageFrame
             key={currentKey === undefined ? undefined : String(currentKey)}
             info={pageInfo}
@@ -746,8 +788,9 @@ function NavLinkBase({
 
   return (
     <Tag
-      data-nv-item=""
       title={tooltip}
+      {...rest}
+      data-nv-item=""
       className={cx(
         styles.item,
         isSub && styles.sub,
@@ -755,10 +798,9 @@ function NavLinkBase({
         disabled && styles.disabled,
         className,
       )}
-      aria-current={selected ? "page" : undefined}
+      aria-current={selected ? "page" : rest["aria-current"]}
       onClick={handleClick}
       {...tagProps}
-      {...rest}
     >
       {icon && !isSub && <span className={styles.icon}>{icon}</span>}
       <span className={styles.content}>{children}</span>
@@ -798,6 +840,8 @@ export function NavCategory({
   const { selectedValue, openCategories, toggleCategory, isPaneOpen, rootRef } =
     useNav();
   const groupId = useId();
+  const flyoutId = `${groupId}-flyout`;
+  const titleId = `${groupId}-title`;
   const buttonRef = useRef<HTMLButtonElement>(null);
   const flyoutRef = useRef<HTMLDivElement>(null);
   const [flyout, setFlyout] = useState<{ left: number; top: number } | null>(
@@ -820,7 +864,7 @@ export function NavCategory({
     if (isPaneOpen) setFlyout(null);
   }, [isPaneOpen]);
 
-  useIsoLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const el = flyoutRef.current;
     const root = rootRef.current;
     if (!flyoutOpen || !el || !flyout || !root) return;
@@ -876,10 +920,26 @@ export function NavCategory({
       buttonRef.current?.focus();
       return;
     }
+    if (event.key === "Tab") {
+      // The popup is last in the DOM: close it and continue from the category button.
+      // Меню последнее в DOM: закрываем его и продолжаем от кнопки категории.
+      setFlyout(null);
+      buttonRef.current?.focus();
+      return;
+    }
     if (moveFocusInContainer(flyoutRef.current, event.key, false)) {
       event.preventDefault();
       event.stopPropagation();
     }
+  };
+
+  const handleFlyoutBlur = (event: React.FocusEvent<HTMLDivElement>) => {
+    const next = event.relatedTarget as Node | null;
+    if (!next) return;
+    if (flyoutRef.current?.contains(next) || buttonRef.current?.contains(next)) {
+      return;
+    }
+    setFlyout(null);
   };
 
   const handleFlyoutClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -902,13 +962,14 @@ export function NavCategory({
           disabled && styles.disabled,
         )}
         aria-expanded={compact ? flyoutOpen : isOpen}
-        aria-haspopup={compact ? "true" : undefined}
-        aria-controls={compact ? undefined : groupId}
+        aria-controls={compact ? (flyoutOpen ? flyoutId : undefined) : groupId}
         disabled={disabled}
         onClick={handleCategoryClick}
       >
         {icon && <span className={styles.icon}>{icon}</span>}
-        <span className={styles.content}>{title}</span>
+        <span id={titleId} className={styles.content}>
+          {title}
+        </span>
         <span className={cx(styles.chevron, inlineOpen && styles.chevronOpen)}>
           <ChevronIcon />
         </span>
@@ -917,6 +978,7 @@ export function NavCategory({
       <div
         id={groupId}
         role="group"
+        aria-labelledby={titleId}
         data-nv-collapsed={!inlineOpen}
         className={cx(styles.group, inlineOpen && styles.groupOpen)}
       >
@@ -928,14 +990,16 @@ export function NavCategory({
         createPortal(
           <FrostedGlass
             ref={flyoutRef}
+            id={flyoutId}
             width="auto"
             height="auto"
             role="group"
-            aria-label={typeof title === "string" ? title : undefined}
+            aria-labelledby={titleId}
             data-nv-flyout=""
             className={styles.flyout}
             style={{ ...FLYOUT_STYLE, left: flyout.left, top: flyout.top }}
             onKeyDown={handleFlyoutKeyDown}
+            onBlur={handleFlyoutBlur}
             onClick={handleFlyoutClick}
           >
             {children}

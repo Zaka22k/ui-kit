@@ -538,7 +538,7 @@
   max-height: 40px;
   padding: 14px 11px 4px;
   overflow: hidden;
-  color: var(--label-secondary);
+  color: var(--label-secondary-strong);
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
@@ -573,6 +573,8 @@
   height: 100%;
   overflow: hidden;
   overflow: clip;
+  /* Получает фокус программно, когда после закрытия панели вернуть его некуда */
+  outline: none;
 }
 
 .scroller {
@@ -598,5 +600,63 @@
   .flyout {
     transition: none;
     animation: none;
+  }
+}
+
+/*
+ * Режим высокой контрастности: фоны и тени отключаются, поэтому выбор, границы панели и
+ * всплывающего меню рисуем системными цветами.
+ */
+@media (forced-colors: active) {
+  .paneNav {
+    border-right: 1px solid CanvasText;
+  }
+
+  .minimal.strip .paneNav {
+    border-right: 0;
+  }
+
+  .item:hover {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  .selected {
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+
+  .selected::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 3px;
+    height: 16px;
+    border-radius: var(--CircularCornerRadius);
+    background-color: Highlight;
+    transform: translateY(-50%);
+    forced-color-adjust: none;
+  }
+
+  .item:focus-visible {
+    outline: 2px solid CanvasText;
+  }
+
+  .disabled {
+    opacity: 1;
+    color: GrayText;
+  }
+
+  .disabled .icon {
+    color: GrayText;
+  }
+
+  .divider {
+    background-color: CanvasText;
+  }
+
+  .flyout {
+    border: 1px solid CanvasText;
   }
 }

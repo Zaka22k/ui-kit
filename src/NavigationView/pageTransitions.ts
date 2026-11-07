@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useLayoutEffect } from "react";
+import { createContext, useContext } from "react";
+import { useIsomorphicLayoutEffect } from "../utils/useIsomorphicLayoutEffect";
 
 /* ------------------------------------------------------------------ */
 /* Переходы между страницами NavigationView                            */
@@ -347,12 +348,9 @@ export const PageFrameContext = createContext<PageFrameContextValue | null>(
   null,
 );
 
-const useIsoLayoutEffect =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
-
 export function usePageTransition(setting?: PageTransitionSetting): void {
   const frame = useContext(PageFrameContext);
-  useIsoLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     frame?.setTransition(setting);
   }, [frame, setting]);
 }
