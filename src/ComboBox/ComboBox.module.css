@@ -15,7 +15,7 @@
 
 .label {
   flex: none;
-  color: var(--label-secondary);
+  color: var(--label-secondary-strong);
 }
 
 .labelStart .label {
@@ -50,7 +50,7 @@
   gap: 4px;
   height: var(--ControlHeight);
   padding: 0 5px 0 var(--ControlPaddingInline);
-  border: 1px solid var(--window-border);
+  border: 1px solid var(--control-border);
   border-radius: var(--ControlCornerRadius);
   background-color: var(--fill-tertiary);
   transition:
@@ -91,15 +91,89 @@
 .hint {
   width: 0;
   min-width: 100%;
-  color: var(--label-secondary);
+  color: var(--label-secondary-strong);
   overflow-wrap: anywhere;
 }
 
 .invalid .hint {
-  color: var(--system-red);
+  color: var(--system-red-text);
 }
 
 .disabled .hint {
+  color: var(--label-tertiary);
+}
+
+/* Область ввода: в режиме multiple в ней же метки, они переносятся на новые строки. */
+.inputArea {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.multi .control {
+  height: auto;
+  min-height: var(--ControlHeight);
+  padding-block: 3px;
+}
+
+.multi .inputArea {
+  flex-wrap: wrap;
+  height: auto;
+}
+
+.multi .input {
+  flex: 1 1 60px;
+  min-width: 60px;
+  height: 24px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  height: 24px;
+  padding: 0 2px 0 8px;
+  border-radius: var(--ControlCornerRadius);
+  background-color: var(--fill-primary);
+  color: var(--label-primary);
+}
+
+.chipLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chipRemove {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--CircularCornerRadius);
+  background: transparent;
+  color: var(--label-secondary-strong);
+  cursor: pointer;
+}
+
+.chipRemove:hover {
+  background-color: var(--fill-primary);
+  color: var(--label-primary);
+}
+
+.chipRemove:disabled {
+  color: var(--label-tertiary);
+  cursor: default;
+}
+
+.disabled .chip {
   color: var(--label-tertiary);
 }
 
@@ -115,7 +189,7 @@
 }
 
 .input::placeholder {
-  color: var(--text-placeholder);
+  color: var(--label-secondary-strong);
 }
 
 .input::selection {
@@ -142,7 +216,7 @@
   border: 0;
   border-radius: var(--CircularCornerRadius);
   background: transparent;
-  color: var(--label-secondary);
+  color: var(--label-secondary-strong);
   cursor: pointer;
   transition:
     background-color var(--ControlAnimationDuration)
@@ -241,6 +315,34 @@
   background-color: var(--fill-secondary);
 }
 
+/* Выбранный пункт: галочка справа. */
+.check {
+  flex: none;
+  margin-inline-start: 8px;
+  color: var(--label-primary);
+}
+
+/* Строка «Повторить» после неудачной подгрузки. */
+.retryMessage {
+  color: var(--system-red-text);
+}
+
+.retryAction {
+  margin-inline-start: 8px;
+  color: var(--link);
+  font-weight: 600;
+}
+
+/* Загрузка и «нет вариантов» под прокручиваемой частью списка. */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 10px;
+  color: var(--label-secondary-strong);
+}
+
 /* Содержимое пункта не шире поля: длинный текст обрезается многоточием. */
 .optionContent {
   flex: 1 1 auto;
@@ -248,6 +350,34 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (forced-colors: active) {
+  .optionActive {
+    background-color: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .optionActive .check,
+  .optionActive .retryMessage,
+  .optionActive .retryAction {
+    color: HighlightText;
+  }
+
+  .chip {
+    border: 1px solid CanvasText;
+  }
+
+  .chipRemove {
+    color: ButtonText;
+  }
+
+  .button:disabled,
+  .chipRemove:disabled,
+  .input:disabled {
+    color: GrayText;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

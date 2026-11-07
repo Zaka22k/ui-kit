@@ -9,6 +9,7 @@ import type {
 } from "react";
 import { useFormStatus } from "react-dom";
 import { cx } from "../utils/cx";
+import { hasContent } from "../utils/hasContent";
 import { useForwardedRef } from "../utils/useForwardedRef";
 import styles from "./Fields.module.css";
 
@@ -34,9 +35,6 @@ export type FieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size"> & {
 };
 
 export type TextFieldProps = FieldProps;
-
-const hasContent = (node: ReactNode): boolean =>
-  node !== undefined && node !== null && node !== false && node !== "";
 
 export const TextField = forwardRef<HTMLInputElement, FieldProps>(
   function TextField(

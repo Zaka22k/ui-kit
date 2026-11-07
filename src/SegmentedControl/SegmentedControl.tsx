@@ -17,6 +17,7 @@ import type {
 } from "react";
 import { FrostedGlass } from "../FrostedGlass";
 import { cx } from "../utils/cx";
+import { hasContent } from "../utils/hasContent";
 import { useForwardedRef } from "../utils/useForwardedRef";
 import { useIsomorphicLayoutEffect } from "../utils/useIsomorphicLayoutEffect";
 import {
@@ -26,9 +27,6 @@ import {
   type SegmentVariant,
 } from "./SegmentedControlTypes";
 import styles from "./SegmentedControl.module.css";
-
-const hasContent = (node: ReactNode): boolean =>
-  node !== undefined && node !== null && node !== false && node !== "";
 
 export interface SegmentedControlProps<T extends SegmentValue = SegmentValue>
   extends Omit<HTMLAttributes<HTMLDivElement>, "onChange" | "defaultValue"> {

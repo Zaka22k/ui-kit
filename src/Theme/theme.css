@@ -18,6 +18,8 @@
 :root {
   /* SYSTEM COLORS */
   --system-red: light-dark(#ff3b30, #ff453a);
+  /* Красный для текста ошибок: контраст не ниже 4.5:1 */
+  --system-red-text: light-dark(#d70015, #ff6961);
   --system-orange: light-dark(#ff9500, #ff9f0a);
   --system-yellow: light-dark(#ffcc00, #ffd60a);
   --system-green: light-dark(#28cd41, #32d74b);
@@ -43,6 +45,11 @@
   --label-secondary: light-dark(rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0.55));
   --label-tertiary: light-dark(rgba(0, 0, 0, 0.25), rgba(255, 255, 255, 0.25));
   --label-quaternary: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+  /* Подписи, подсказки и placeholder: контраст не ниже 4.5:1 (WCAG 1.4.3) */
+  --label-secondary-strong: light-dark(
+    rgba(0, 0, 0, 0.62),
+    rgba(255, 255, 255, 0.65)
+  );
 
   --text-primary: light-dark(#000000, #ffffff);
   --text-placeholder: light-dark(
@@ -103,6 +110,8 @@
   --separator-opaque: light-dark(#c6c6c8, #38383a);
   --grid-color: light-dark(rgba(0, 0, 0, 0.07), rgba(255, 255, 255, 0.07));
   --window-border: light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.15));
+  /* Рамка поля ввода: контраст не ниже 3:1 с фоном (WCAG 1.4.11) */
+  --control-border: light-dark(rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0.5));
   --window-inner-glow-color: light-dark(
     rgba(255, 255, 255, 0.6),
     rgba(255, 255, 255, 0.15)
